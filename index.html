@@ -1078,7 +1078,7 @@
             <div class="row2 gap">
               <div>
                 <label>Template kalimat uji</label>
-                <input type="text" id="termTemplate" value="Pasien dengan {term}." />
+                <input type="text" id="termTemplate" value="The patient has {term}." />
                 <div style="font-size: 11px; color: var(--text3); margin-top: 4px">{term} diganti tiap istilah</div>
               </div>
               <div>
@@ -1411,7 +1411,7 @@
           <div class="ibox"><span class="ico">→</span>Jalankan anotasi dulu, lalu review tiap field output bersama orang kedua.</div>
           <div class="card">
             <div class="ctitle">Input & jalankan anotasi</div>
-            <textarea id="explainInput" placeholder="Catatan klinis sintetis...">Pasien hipertensi, minum amlodipine 5 mg setiap malam. Tekanan darah 145/90 mmHg.</textarea>
+            <textarea id="explainInput" placeholder="Catatan klinis sintetis...">The patient has hypertension and takes amlodipine 5 mg nightly. Blood pressure is 145/90 mmHg.</textarea>
             <div style="display: flex; gap: 8px; margin-top: 10px; align-items: center">
               <button class="btn btn-p" onclick="runExplain()">Ambil output JSON</button>
               <span id="explainSp" style="display: none"><span class="sp"></span></span>
@@ -2040,7 +2040,7 @@
             <textarea
               id="runbookSteps"
               style="min-height: 200px; font-family: var(--mono); font-size: 12px"
-              placeholder='RUNBOOK CogStack NLP — Operasi Dasar&#10;Ditulis oleh: [nama]  |  Tanggal: [tanggal]  |  Versi service: [versi]&#10;&#10;1. START SERVICE&#10;   cd /path/to/medcat-service&#10;   docker compose up -d&#10;   # Tunggu 30-60 detik&#10;&#10;2. HEALTH CHECK&#10;   curl http://localhost:5000/api/info&#10;   # Pastikan response status: ok&#10;&#10;3. SMOKE TEST&#10;   curl -X POST http://localhost:5000/api/process \&#10;     -H &apos;Content-Type: application/json&apos; \&#10;     -d &apos;{"content": [{"text": "Pasien hipertensi."}]}&apos;&#10;   # Pastikan ada entities dalam response&#10;&#10;4. SIMPAN BUKTI&#10;   Screenshot response ke folder: /bukti/[tanggal]/'
+              placeholder='RUNBOOK CogStack NLP — Operasi Dasar&#10;Ditulis oleh: [nama]  |  Tanggal: [tanggal]  |  Versi service: [versi]&#10;&#10;1. START SERVICE&#10;   cd /path/to/medcat-service&#10;   docker compose up -d&#10;   # Tunggu 30-60 detik&#10;&#10;2. HEALTH CHECK&#10;   curl http://localhost:5000/api/info&#10;   # Pastikan response status: ok&#10;&#10;3. SMOKE TEST&#10;   curl -X POST http://localhost:5000/api/process \&#10;     -H &apos;Content-Type: application/json&apos; \&#10;     -d &apos;{"content": {"text": "Pasien hipertensi."}}&apos;&#10;   # Pastikan ada entities dalam response&#10;&#10;4. SIMPAN BUKTI&#10;   Screenshot response ke folder: /bukti/[tanggal]/'
             ></textarea>
             <label class="gap">Reviewer kedua — apakah runbook ini dapat diikuti tanpa bantuan?</label>
             <div style="display: flex; gap: 8px; margin-top: 6px">
@@ -2195,14 +2195,14 @@
     <script>
       // ========== DATA ==========
       const SAMPLES = {
-        s1: "Pasien datang dengan keluhan demam 3 hari, batuk kering, dan pilek. Dokter memberikan paracetamol 500 mg tiga kali sehari dan anjuran istirahat cukup.",
-        s2: "Pasien asma, menggunakan salbutamol inhaler bila sesak. Riwayat rawat inap karena serangan asma berat 2 tahun lalu. Saat ini dalam kondisi stabil.",
-        s3: "Pasien hipertensi stage 1, minum amlodipine 5 mg setiap malam hari. Tekanan darah terakhir 145/90 mmHg. Dianjurkan kontrol rutin tiap bulan.",
-        s4: "Pasien diabetes melitus tipe 2, mendapat terapi metformin 500 mg dua kali sehari. Gula darah sewaktu 210 mg/dL. Disarankan diet rendah karbohidrat.",
-        s5: "Pasien datang dengan nyeri dada kiri menjalar ke lengan. Diberikan nitrogliserin sublingual dengan respons baik. Dirujuk ke kardiologi untuk evaluasi lebih lanjut.",
-        s6: "Pasien alergi penisilin. Terdapat riwayat reaksi anafilaksis 5 tahun lalu. Obat antibiotik yang dipilih diganti dengan azithromycin 500 mg selama 3 hari.",
-        s7: "Pasien PPOK dengan eksaserbasi ringan. Mendapat terapi salbutamol nebulisasi dan tiotropium inhalasi. Saturasi oksigen 94%. Rencana rawat jalan dengan kontrol seminggu.",
-        s8: "Pasien gagal jantung kongestif EF 35%. Mendapat furosemide 40 mg, spironolakton 25 mg, dan bisoprolol 2.5 mg. Edema tungkai berkurang. Rencana ekokardiografi ulang.",
+        s1: "The patient presents with fever for 3 days, dry cough, and rhinorrhea. The physician prescribed paracetamol 500 mg three times daily and advised rest.",
+        s2: "The patient has asthma and uses a salbutamol inhaler as needed for dyspnea. There was a prior admission for severe asthma exacerbation two years ago. The patient is currently stable.",
+        s3: "The patient has stage 1 hypertension and takes amlodipine 5 mg every night. Latest blood pressure is 145/90 mmHg. Monthly follow-up is recommended.",
+        s4: "The patient has type 2 diabetes mellitus and receives metformin 500 mg twice daily. Random blood glucose is 210 mg/dL. A low-carbohydrate diet is advised.",
+        s5: "The patient reports left-sided chest pain radiating to the arm. Sublingual nitroglycerin was given with good response. The patient was referred to cardiology for further evaluation.",
+        s6: "The patient is allergic to penicillin with a history of anaphylaxis five years ago. The selected antibiotic was switched to azithromycin 500 mg for 3 days.",
+        s7: "The patient has COPD with a mild exacerbation. Treatment includes nebulized salbutamol and inhaled tiotropium. Oxygen saturation is 94 percent. Outpatient follow-up in one week is planned.",
+        s8: "The patient has congestive heart failure with ejection fraction of 35 percent. Current treatment includes furosemide 40 mg, spironolactone 25 mg, and bisoprolol 2.5 mg. Lower limb edema has improved, and repeat echocardiography is planned.",
       };
       const DEIDENT_SAMPLES = {
         d1: "Budi Santoso, laki-laki 45 tahun, datang ke poli interna. Berdomisili di Jalan Melati 10, Yogyakarta. Dapat dihubungi di nomor 0812-3456-7890.",
@@ -2220,11 +2220,11 @@
         custom: '{\n  "content": [\n    {\n      "text": "Pasien hipertensi."\n    }\n  ]\n}',
       };
       const SAFETY_SAMPLES = {
-        alergi: ["Pasien alergi penisilin. Riwayat anafilaksis 5 tahun lalu.", "alergi, penisilin"],
-        kontra: ["Pasien gagal ginjal berat. Metformin merupakan kontraindikasi pada kondisi ini.", "metformin, kontraindikasi, gagal ginjal"],
-        henti: ["Warfarin dihentikan 5 hari sebelum operasi atas saran dokter.", "warfarin, dihentikan, operasi"],
-        dosis: ["Pasien mendapat morfin 10 mg IV setiap 4 jam untuk nyeri akut berat.", "morfin, 10 mg, IV"],
-        negasi: ["Tidak ada riwayat diabetes mellitus. Tidak ada hipertensi.", "tidak ada, diabetes, hipertensi"],
+        alergi: ["The patient is allergic to penicillin with prior anaphylaxis.", "allergy, penicillin, anaphylaxis"],
+        kontra: ["The patient has severe renal failure. Metformin is contraindicated in this condition.", "metformin, contraindicated, renal failure"],
+        henti: ["Warfarin was discontinued 5 days before surgery as advised by the physician.", "warfarin, discontinued, surgery"],
+        dosis: ["The patient received morphine 10 mg IV every 4 hours for severe acute pain.", "morphine, 10 mg, iv"],
+        negasi: ["There is no history of diabetes mellitus and no hypertension.", "no history, diabetes, hypertension"],
       };
       const DOCKER_CHECKLIST_ITEMS = [
         { key: "d1", label: "Docker tersedia dan berjalan", desc: "docker --version mengembalikan output" },
@@ -2299,6 +2299,48 @@
       function eh(s) {
         return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       }
+      function toEntityArray(v) {
+        const out = [];
+        const seen = new Set();
+        function walk(node) {
+          if (!node || typeof node !== "object") return;
+          if (Array.isArray(node)) {
+            node.forEach(walk);
+            return;
+          }
+          const looksLikeEntity = node.cui !== undefined || node.pretty_name !== undefined || node.detected_name !== undefined || node.source_value !== undefined || node.start !== undefined || node.end !== undefined;
+          if (looksLikeEntity) {
+            const key = [node.id ?? "", node.start ?? "", node.end ?? "", node.cui ?? "", node.detected_name ?? ""].join("|");
+            if (!seen.has(key)) {
+              seen.add(key);
+              out.push(node);
+            }
+            return;
+          }
+          Object.values(node).forEach(walk);
+        }
+        walk(v);
+        return out;
+      }
+      function extractEntitiesFromResult(result) {
+        if (!result || typeof result !== "object") return [];
+        if (result.annotations && result.annotations.entities) {
+          return toEntityArray(result.annotations.entities);
+        }
+        if (result.annotations && (typeof result.annotations === "object" || Array.isArray(result.annotations))) {
+          const entities = toEntityArray(result.annotations);
+          if (entities.length > 0) return entities;
+        }
+        if (result.entities) return toEntityArray(result.entities);
+        return [];
+      }
+      function extractEntitiesFromResponse(data) {
+        if (!data || !data.result) return [];
+        if (Array.isArray(data.result)) {
+          return extractEntitiesFromResult(data.result[0]);
+        }
+        return extractEntitiesFromResult(data.result);
+      }
 
       // ========== PROGRESS TRACKING ==========
       const panelDone = {};
@@ -2344,11 +2386,7 @@
         document.getElementById("annotSp").style.display = "none";
       }
       function renderAnnotations(text, data) {
-        let entities = [];
-        if (data && data.result) {
-          const docs = Object.values(data.result);
-          if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
-        }
+        let entities = extractEntitiesFromResponse(data);
         entities.sort((a, b) => (a.start || 0) - (b.start || 0));
         let html = "",
           pos = 0;
@@ -2445,7 +2483,7 @@
           .split("\n")
           .map((s) => s.trim())
           .filter(Boolean);
-        const tmpl = document.getElementById("termTemplate").value || "Pasien dengan {term}.";
+        const tmpl = document.getElementById("termTemplate").value || "The patient has {term}.";
         const sp = document.getElementById("termSp"),
           prog = document.getElementById("termProgress");
         sp.style.display = "inline";
@@ -2456,11 +2494,7 @@
           const text = tmpl.replace("{term}", terms[i]);
           try {
             const r = await apiCall("/api/process", "POST", { content: { text } });
-            let entities = [];
-            if (r.data && r.data.result) {
-              const docs = Object.values(r.data.result);
-              if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
-            }
+            const entities = extractEntitiesFromResponse(r.data);
             const hit = entities.find((e) => (e.detected_name || e.pretty_name || "").toLowerCase().includes(terms[i].toLowerCase().split(" ")[0]));
             results.push({ term: terms[i], entities, hit, ms: r.ms });
           } catch (e) {
@@ -2493,11 +2527,12 @@
 
       // ========== NOTE TYPE ==========
       function loadNoteTypeSample() {
-        document.getElementById("ntProgress").value = "S: Pasien DM tipe 2 dan hipertensi, mengeluh pusing. O: TD 150/95, GDS 215. A: HT tidak terkontrol, DM belum stabil. P: Amlodipine 10 mg, metformin lanjut, kontrol 1 minggu.";
+        document.getElementById("ntProgress").value =
+          "S: The patient with type 2 diabetes and hypertension reports dizziness. O: BP 150/95 mmHg, random glucose 215 mg/dL. A: Uncontrolled hypertension and suboptimal glycemic control. P: Increase amlodipine to 10 mg, continue metformin, follow up in 1 week.";
         document.getElementById("ntDischarge").value =
-          "Pasien Tn. X, 52 tahun, dirawat 3 hari dengan diagnosis diabetes melitus tipe 2 tidak terkontrol dan hipertensi. Terapi: metformin 500 mg 2x1, amlodipine 5 mg 1x1. Kondisi membaik, diperbolehkan pulang.";
+          "Mr. X, 52 years old, was hospitalized for 3 days with uncontrolled type 2 diabetes mellitus and hypertension. Discharge medications: metformin 500 mg twice daily and amlodipine 5 mg daily. Clinical condition improved and the patient was discharged home.";
         document.getElementById("ntReferral").value =
-          "Dengan hormat, kami merujuk pasien dengan diabetes melitus tipe 2 dan hipertensi yang belum terkontrol meski sudah mendapat metformin dan amlodipine. Mohon evaluasi dan penanganan lebih lanjut di poliklinik penyakit dalam.";
+          "We are referring a patient with type 2 diabetes mellitus and hypertension that remain uncontrolled despite metformin and amlodipine therapy. Please evaluate and provide further management in the internal medicine clinic.";
       }
       async function runNoteType() {
         const texts = { progress: document.getElementById("ntProgress").value.trim(), discharge: document.getElementById("ntDischarge").value.trim(), referral: document.getElementById("ntReferral").value.trim() };
@@ -2507,11 +2542,7 @@
         for (const [type, text] of Object.entries(texts)) {
           try {
             const r = await apiCall("/api/process", "POST", { content: { text } });
-            let entities = [];
-            if (r.data && r.data.result) {
-              const docs = Object.values(r.data.result);
-              if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
-            }
+            const entities = extractEntitiesFromResponse(r.data);
             results[type] = { entities, ms: r.ms, text };
           } catch (e) {
             results[type] = { entities: [], ms: 0, text, err: e.message };
@@ -2573,11 +2604,7 @@
           if (!text) continue;
           try {
             const r = await apiCall("/api/process", "POST", { content: { text } });
-            let entities = [];
-            if (r.data && r.data.result) {
-              const docs = Object.values(r.data.result);
-              if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
-            }
+            const entities = extractEntitiesFromResponse(r.data);
             const found = expected.filter((exp) => entities.some((e) => (e.pretty_name || e.detected_name || "").toLowerCase().includes(exp)));
             const missed = expected.filter((exp) => !entities.some((e) => (e.pretty_name || e.detected_name || "").toLowerCase().includes(exp)));
             results.push({ text, expected, found, missed, entities, risky: missed.length > 0 });
@@ -2643,11 +2670,7 @@
         document.getElementById("effSp").style.display = "inline";
         try {
           const r = await apiCall("/api/process", "POST", { content: { text } });
-          let entities = [];
-          if (r.data && r.data.result) {
-            const docs = Object.values(r.data.result);
-            if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
-          }
+          const entities = extractEntitiesFromResponse(r.data);
           document.getElementById("effNlpTime").textContent = "NLP: " + r.ms + "ms";
           document.getElementById("mManual").textContent = manualSec || "—";
           document.getElementById("mNlp").textContent = r.ms;
@@ -2700,7 +2723,7 @@
         if (mode === "single" || mode === "both") {
           log.push("=== SINGLE REQUEST ===");
           for (let i = 0; i < texts.length; i++) {
-            const r = await apiCall("/api/process", "POST", { content: [{ text: texts[i] }] });
+            const r = await apiCall("/api/process", "POST", { content: { text: texts[i] } });
             sTimes.push(r.ms);
             log.push("Request " + (i + 1) + ": " + r.ms + "ms (HTTP " + r.status + ")");
           }
@@ -2817,11 +2840,7 @@
         document.getElementById("explainSp").style.display = "inline";
         try {
           const r = await apiCall("/api/process", "POST", { content: { text } });
-          let entities = [];
-          if (r.data && r.data.result) {
-            const docs = Object.values(r.data.result);
-            if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
-          }
+          const entities = extractEntitiesFromResponse(r.data);
           const fieldDefs = {
             detected_name: "Teks yang terdeteksi di catatan",
             pretty_name: "Nama konsep standar (readable)",
@@ -3031,12 +3050,8 @@
         const results = [];
         for (const term of terms) {
           try {
-            const r = await apiCall("/api/process", "POST", { content: { text: "Pasien didiagnosis dengan " + term + "." } });
-            let entities = [];
-            if (r.data && r.data.result) {
-              const docs = Object.values(r.data.result);
-              if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
-            }
+            const r = await apiCall("/api/process", "POST", { content: { text: "The patient was diagnosed with " + term + "." } });
+            const entities = extractEntitiesFromResponse(r.data);
             const hit = entities[0];
             results.push({ term, hit, entities });
           } catch (e) {
