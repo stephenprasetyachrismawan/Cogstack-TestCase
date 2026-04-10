@@ -1,0 +1,5 @@
+<h2 class="panel-title">Latency Benchmark</h2>
+<div class="card row"><label>Count <input id="latCount" type="number" min="1" max="30" value="5"></label><label>Mode <select id="latMode"><option value="single">single</option><option value="bulk">bulk</option><option value="both">both</option></select></label><label>Size <select id="latSize"><option>short</option><option>medium</option><option>long</option></select></label><button id="latRun" class="btn primary">Run</button></div>
+<div class="grid-3"><div class="metric"><div class="label">Avg</div><div id="latAvg" class="value">-</div></div><div class="metric"><div class="label">Min</div><div id="latMin" class="value">-</div></div><div class="metric"><div class="label">Max</div><div id="latMax" class="value">-</div></div></div>
+<div class="card"><div id="latBars" class="bar-wrap"></div></div>
+<div class="card"><pre id="latLog" class="result-box"></pre></div>
