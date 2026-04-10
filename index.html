@@ -1,0 +1,3061 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CogStack NLP — Clinical Tester v2</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #0a0c0f;
+        --surface: #111318;
+        --surface2: #181c24;
+        --border: #242830;
+        --border2: #2e3540;
+        --accent: #00d4a8;
+        --accent2: #0099ff;
+        --danger: #ff4757;
+        --warn: #ffa940;
+        --ok: #00d4a8;
+        --text: #e8edf5;
+        --text2: #8b96a8;
+        --text3: #4a5568;
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "IBM Plex Sans", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        font-size: 14px;
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        grid-template-rows: 52px 1fr;
+        min-height: 100vh;
+      }
+      .topbar {
+        grid-column: 1/-1;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .logo {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--accent);
+        white-space: nowrap;
+      }
+      .logo span {
+        color: var(--text3);
+      }
+      .api-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .api-row label {
+        color: var(--text2);
+        font-size: 12px;
+      }
+      .api-input {
+        background: var(--surface2);
+        border: 1px solid var(--border2);
+        border-radius: 4px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 4px 8px;
+        width: 200px;
+      }
+      .api-input:focus {
+        outline: 1px solid var(--accent);
+        border-color: var(--accent);
+      }
+      .ping-btn {
+        background: none;
+        border: 1px solid var(--border2);
+        border-radius: 4px;
+        color: var(--text2);
+        font-size: 11px;
+        font-family: var(--mono);
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      .ping-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .sdot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--text3);
+      }
+      .sdot.ok {
+        background: var(--accent);
+        box-shadow: 0 0 6px var(--accent);
+      }
+      .sdot.err {
+        background: var(--danger);
+        box-shadow: 0 0 6px var(--danger);
+      }
+      .slabel {
+        font-size: 11px;
+        color: var(--text2);
+        font-family: var(--mono);
+      }
+      .progress-pill {
+        font-family: var(--mono);
+        font-size: 11px;
+        background: rgba(0, 212, 168, 0.1);
+        color: var(--accent);
+        padding: 3px 10px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 212, 168, 0.2);
+        white-space: nowrap;
+      }
+
+      /* SIDEBAR */
+      .sidebar {
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        padding: 12px 0;
+      }
+      .ns {
+        padding: 0 12px;
+        margin-bottom: 2px;
+      }
+      .nl {
+        font-size: 10px;
+        font-family: var(--mono);
+        color: var(--text3);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin: 10px 0 4px;
+        padding: 0 4px;
+      }
+      .ni {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        color: var(--text2);
+        font-size: 12px;
+        transition: all 0.12s;
+        margin-bottom: 1px;
+        position: relative;
+      }
+      .ni:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .ni.active {
+        background: rgba(0, 212, 168, 0.08);
+        color: var(--accent);
+      }
+      .ni-icon {
+        font-size: 13px;
+        width: 16px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .ni-badge {
+        margin-left: auto;
+        font-size: 10px;
+        font-family: var(--mono);
+        background: rgba(0, 212, 168, 0.15);
+        color: var(--accent);
+        padding: 1px 6px;
+        border-radius: 3px;
+      }
+      .ni-badge.done {
+        background: rgba(0, 212, 168, 0.3);
+      }
+      .ndiv {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 8px 12px;
+      }
+
+      /* MAIN */
+      .main {
+        background: var(--bg);
+        overflow-y: auto;
+        height: calc(100vh - 52px);
+      }
+      .panel {
+        display: none;
+        padding: 24px 28px;
+        max-width: 920px;
+      }
+      .panel.active {
+        display: block;
+      }
+      .ptitle {
+        font-size: 17px;
+        font-weight: 500;
+        margin-bottom: 3px;
+      }
+      .psub {
+        font-size: 12px;
+        color: var(--text2);
+        margin-bottom: 20px;
+      }
+      .pref {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        padding: 1px 6px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      /* CARDS */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 18px;
+        margin-bottom: 14px;
+      }
+      .ctitle {
+        font-size: 11px;
+        font-family: var(--mono);
+        color: var(--text2);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+
+      /* FORMS */
+      label {
+        font-size: 12px;
+        color: var(--text2);
+        display: block;
+        margin-bottom: 5px;
+      }
+      textarea,
+      input[type="text"],
+      select {
+        width: 100%;
+        background: var(--surface2);
+        border: 1px solid var(--border2);
+        border-radius: 5px;
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 13px;
+        padding: 8px 10px;
+        transition: border-color 0.15s;
+      }
+      textarea:focus,
+      input[type="text"]:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      textarea {
+        resize: vertical;
+        min-height: 100px;
+        line-height: 1.6;
+      }
+      select option {
+        background: var(--surface2);
+      }
+      input[type="checkbox"] {
+        accent-color: var(--accent);
+        width: 15px;
+        height: 15px;
+        cursor: pointer;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-size: 13px;
+        font-family: var(--sans);
+        cursor: pointer;
+        border: none;
+        font-weight: 500;
+        transition: all 0.15s;
+      }
+      .btn-p {
+        background: var(--accent);
+        color: #000;
+      }
+      .btn-p:hover {
+        background: #00f0c0;
+      }
+      .btn-p:disabled {
+        background: var(--text3);
+        cursor: not-allowed;
+      }
+      .btn-g {
+        background: none;
+        border: 1px solid var(--border2);
+        color: var(--text2);
+      }
+      .btn-g:hover {
+        border-color: var(--text2);
+        color: var(--text);
+      }
+      .btn-d {
+        background: none;
+        border: 1px solid var(--danger);
+        color: var(--danger);
+      }
+      .btn-d:hover {
+        background: rgba(255, 71, 87, 0.1);
+      }
+      .btn-w {
+        background: none;
+        border: 1px solid var(--warn);
+        color: var(--warn);
+      }
+      .btn-w:hover {
+        background: rgba(255, 169, 64, 0.1);
+      }
+      .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .row3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+      }
+      .gap {
+        margin-top: 10px;
+      }
+
+      /* RESULT */
+      .rbox {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 12px;
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 320px;
+        overflow-y: auto;
+      }
+      .rbox.ok {
+        border-color: rgba(0, 212, 168, 0.4);
+      }
+      .rbox.err {
+        border-color: rgba(255, 71, 87, 0.4);
+        color: #ff8088;
+      }
+
+      /* ENTITY */
+      .etext {
+        line-height: 2.4;
+        font-size: 14px;
+        padding: 14px;
+        background: var(--surface2);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+      }
+      .ec {
+        display: inline;
+        border-radius: 3px;
+        padding: 1px 0;
+        cursor: pointer;
+        position: relative;
+      }
+      .ec[data-t="0"] {
+        background: rgba(0, 212, 168, 0.2);
+        border-bottom: 2px solid var(--accent);
+      }
+      .ec[data-t="1"] {
+        background: rgba(0, 153, 255, 0.2);
+        border-bottom: 2px solid var(--accent2);
+      }
+      .ec[data-t="2"] {
+        background: rgba(255, 169, 64, 0.2);
+        border-bottom: 2px solid var(--warn);
+      }
+      .ec[data-t="3"] {
+        background: rgba(255, 71, 87, 0.2);
+        border-bottom: 2px solid var(--danger);
+      }
+      .ett {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 4px);
+        left: 0;
+        background: var(--surface);
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 11px;
+        font-family: var(--mono);
+        white-space: nowrap;
+        z-index: 99;
+        min-width: 210px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      .ec:hover .ett {
+        display: block;
+      }
+      .ttr {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        color: var(--text2);
+        margin-bottom: 2px;
+      }
+      .ttr .tv {
+        color: var(--text);
+      }
+      .legend {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text2);
+      }
+      .ld {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+      }
+
+      /* TABLE */
+      .etab {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        font-family: var(--mono);
+      }
+      .etab th {
+        text-align: left;
+        padding: 7px 8px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text3);
+        font-weight: 400;
+      }
+      .etab td {
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text2);
+      }
+      .etab tr:hover td {
+        background: var(--surface2);
+      }
+      .etab td:first-child {
+        color: var(--text);
+      }
+      .abar {
+        height: 4px;
+        background: var(--border2);
+        border-radius: 2px;
+        margin-top: 2px;
+      }
+      .afill {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--accent);
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+      }
+      .tg {
+        background: rgba(0, 212, 168, 0.15);
+        color: var(--accent);
+      }
+      .tb {
+        background: rgba(0, 153, 255, 0.15);
+        color: var(--accent2);
+      }
+      .tw {
+        background: rgba(255, 169, 64, 0.15);
+        color: var(--warn);
+      }
+      .tr {
+        background: rgba(255, 71, 87, 0.15);
+        color: var(--danger);
+      }
+      .tgr {
+        background: rgba(139, 150, 168, 0.15);
+        color: var(--text2);
+      }
+
+      /* METRICS */
+      .mrow {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .mcard {
+        background: var(--surface2);
+        border-radius: 6px;
+        padding: 12px;
+        border: 1px solid var(--border);
+      }
+      .mval {
+        font-size: 22px;
+        font-weight: 500;
+        font-family: var(--mono);
+        color: var(--accent);
+      }
+      .mlbl {
+        font-size: 11px;
+        color: var(--text3);
+        margin-top: 2px;
+      }
+
+      /* SPINNER */
+      .sp {
+        display: inline-block;
+        width: 13px;
+        height: 13px;
+        border: 2px solid var(--border2);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* LATENCY BARS */
+      .lbars {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        height: 90px;
+        margin: 10px 0;
+      }
+      .lbw {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        flex: 1;
+      }
+      .lb {
+        width: 100%;
+        background: var(--accent);
+        border-radius: 3px 3px 0 0;
+        min-height: 2px;
+        transition: height 0.4s;
+      }
+      .llab {
+        font-size: 10px;
+        font-family: var(--mono);
+        color: var(--text3);
+      }
+      .lval {
+        font-size: 9px;
+        font-family: var(--mono);
+        color: var(--accent);
+      }
+
+      /* CHECKLIST */
+      .cklist {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .ckitem {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 12px;
+        background: var(--surface2);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+      }
+      .ckitem.done-item {
+        border-color: rgba(0, 212, 168, 0.3);
+      }
+      .ckmain {
+        flex: 1;
+      }
+      .cklbl {
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
+      .ckdesc {
+        font-size: 12px;
+        color: var(--text2);
+      }
+      .ckstatus {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .ckbtn {
+        padding: 4px 10px;
+        font-size: 11px;
+        border-radius: 4px;
+        border: 1px solid var(--border2);
+        background: none;
+        color: var(--text2);
+        cursor: pointer;
+        font-family: var(--mono);
+      }
+      .ckbtn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .ckbtn.sel-ada {
+        border-color: var(--accent);
+        background: rgba(0, 212, 168, 0.1);
+        color: var(--accent);
+      }
+      .ckbtn.sel-tidak {
+        border-color: var(--danger);
+        background: rgba(255, 71, 87, 0.1);
+        color: var(--danger);
+      }
+      .ckbtn.sel-partial {
+        border-color: var(--warn);
+        background: rgba(255, 169, 64, 0.1);
+        color: var(--warn);
+      }
+
+      /* DIFF */
+      .dgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .dpanel {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+      }
+      .dtitle {
+        font-size: 11px;
+        font-family: var(--mono);
+        color: var(--text3);
+        margin-bottom: 8px;
+      }
+      .efound {
+        display: inline-block;
+        background: rgba(0, 212, 168, 0.15);
+        color: var(--accent);
+        border-radius: 3px;
+        padding: 0 4px;
+        margin: 2px;
+        font-size: 11px;
+        font-family: var(--mono);
+      }
+      .emanual {
+        display: inline-block;
+        background: rgba(255, 169, 64, 0.15);
+        color: var(--warn);
+        border-radius: 3px;
+        padding: 0 4px;
+        margin: 2px;
+        font-size: 11px;
+        font-family: var(--mono);
+      }
+      .emiss {
+        display: inline-block;
+        background: rgba(255, 71, 87, 0.15);
+        color: var(--danger);
+        border-radius: 3px;
+        padding: 0 4px;
+        margin: 2px;
+        font-size: 11px;
+        font-family: var(--mono);
+      }
+
+      /* HTTP */
+      .hbadge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 500;
+        margin-right: 8px;
+      }
+      .h2 {
+        background: rgba(0, 212, 168, 0.2);
+        color: var(--accent);
+      }
+      .h4 {
+        background: rgba(255, 71, 87, 0.2);
+        color: var(--danger);
+      }
+      .h5 {
+        background: rgba(255, 169, 64, 0.2);
+        color: var(--warn);
+      }
+
+      /* NEG PRESETS */
+      .npre {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .nchip {
+        padding: 5px 11px;
+        border-radius: 20px;
+        border: 1px solid var(--border2);
+        font-size: 11px;
+        color: var(--text2);
+        cursor: pointer;
+        font-family: var(--mono);
+        transition: all 0.12s;
+      }
+      .nchip:hover,
+      .nchip.act {
+        border-color: var(--danger);
+        background: rgba(255, 71, 87, 0.08);
+        color: var(--danger);
+      }
+
+      /* RISK TABLE */
+      .rtab {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      .rtab th {
+        text-align: left;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text3);
+        font-weight: 400;
+        font-family: var(--mono);
+      }
+      .rtab td {
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      .rtab input[type="text"] {
+        font-size: 12px;
+        padding: 4px 8px;
+      }
+      .rtab select {
+        font-size: 12px;
+        padding: 4px 6px;
+      }
+
+      /* INFO BOX */
+      .ibox {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 9px 12px;
+        background: rgba(0, 212, 168, 0.05);
+        border: 1px solid rgba(0, 212, 168, 0.15);
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--text2);
+        margin-bottom: 14px;
+      }
+      .ibox .ico {
+        color: var(--accent);
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .wbox {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 9px 12px;
+        background: rgba(255, 169, 64, 0.05);
+        border: 1px solid rgba(255, 169, 64, 0.2);
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--text2);
+        margin-bottom: 14px;
+      }
+      .wbox .ico {
+        color: var(--warn);
+      }
+
+      /* SAFETY */
+      .srow {
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        margin-bottom: 8px;
+        background: var(--surface2);
+      }
+      .srow-flag {
+        border-color: rgba(255, 71, 87, 0.4);
+        background: rgba(255, 71, 87, 0.04);
+      }
+      .flag-ico {
+        color: var(--danger);
+        font-size: 14px;
+        margin-right: 6px;
+      }
+
+      /* TIMER */
+      .timer-big {
+        font-family: var(--mono);
+        font-size: 32px;
+        color: var(--accent);
+        letter-spacing: 0.05em;
+      }
+
+      /* HARM */
+      .harm-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 2fr;
+        gap: 8px;
+        margin-bottom: 8px;
+        align-items: start;
+      }
+
+      /* SCROLLBAR */
+      ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+      }
+      hr.sep {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 18px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="logo">CogStack<span>/</span>NLP <span style="color: var(--text3); font-size: 10px">clinical tester v2 · 44 test case</span></div>
+        <div class="api-row">
+          <label>API:</label>
+          <input class="api-input" id="apiBase" value="" placeholder="same-origin proxy atau http://localhost:5556" />
+          <button class="ping-btn" onclick="pingApi()">ping</button>
+          <div class="sdot" id="sdot"></div>
+          <span class="slabel" id="slabel">—</span>
+          <span class="progress-pill" id="progressPill">0 / 44 selesai</span>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div class="ns">
+          <div class="nl">Live API Test</div>
+          <div class="ni active" onclick="nav('annotate', this)"><span class="ni-icon">◈</span>Anotasi NLP<span class="ni-badge" id="b-annotate">WI-03</span></div>
+          <div class="ni" onclick="nav('deident', this)"><span class="ni-icon">◉</span>De-identification<span class="ni-badge" id="b-deident">WI-07</span></div>
+          <div class="ni" onclick="nav('terminology', this)"><span class="ni-icon">◍</span>Terminology Checker<span class="ni-badge" id="b-terminology">EI-02</span></div>
+          <div class="ni" onclick="nav('notetype', this)"><span class="ni-icon">◐</span>Note Type Comparator<span class="ni-badge" id="b-notetype">EI-03</span></div>
+          <div class="ni" onclick="nav('safety', this)"><span class="ni-icon">⚠</span>Safety Annotator<span class="ni-badge" id="b-safety">ESC-05</span></div>
+          <div class="ni" onclick="nav('efficiency', this)"><span class="ni-icon">◎</span>Manual vs NLP<span class="ni-badge" id="b-efficiency">ESC-03</span></div>
+          <div class="ni" onclick="nav('latency', this)"><span class="ni-icon">◷</span>Latency Benchmark<span class="ni-badge" id="b-latency">ESC-01</span></div>
+          <div class="ni" onclick="nav('negative', this)"><span class="ni-icon">◌</span>Negative Case<span class="ni-badge" id="b-negative">ESC-04</span></div>
+          <div class="ni" onclick="nav('serviceinfo', this)"><span class="ni-icon">◻</span>Service Info<span class="ni-badge" id="b-serviceinfo">UT-04</span></div>
+          <div class="ni" onclick="nav('explainability', this)"><span class="ni-icon">◑</span>Explainability Review<span class="ni-badge" id="b-explainability">UT-03</span></div>
+        </div>
+        <hr class="ndiv" />
+        <div class="ns">
+          <div class="nl">Checklist & Analisis</div>
+          <div class="ni" onclick="nav('workflow', this)"><span class="ni-icon">→</span>Workflow Map<span class="ni-badge" id="b-workflow">WI-01</span></div>
+          <div class="ni" onclick="nav('docker', this)"><span class="ni-icon">⬡</span>Docker Readiness<span class="ni-badge" id="b-docker">WI-06</span></div>
+          <div class="ni" onclick="nav('licensing', this)"><span class="ni-icon">◯</span>Dependency Lisensi<span class="ni-badge" id="b-licensing">MI-03</span></div>
+          <div class="ni" onclick="nav('equity', this)"><span class="ni-icon">◆</span>Equity & Coverage<span class="ni-badge" id="b-equity">EI-01</span></div>
+          <div class="ni" onclick="nav('harm', this)"><span class="ni-icon">⊘</span>Harm Scenario<span class="ni-badge" id="b-harm">HI-05</span></div>
+          <div class="ni" onclick="nav('usecase', this)"><span class="ni-icon">◇</span>Use Case & KPI<span class="ni-badge" id="b-usecase">HI-01</span></div>
+          <div class="ni" onclick="nav('governance', this)"><span class="ni-icon">⊡</span>Governance & Trust<span class="ni-badge" id="b-governance">MI-02</span></div>
+          <div class="ni" onclick="nav('raci', this)"><span class="ni-icon">◈</span>RACI & Role<span class="ni-badge" id="b-raci">MI-04</span></div>
+          <div class="ni" onclick="nav('gonogo', this)"><span class="ni-icon">▶</span>Go / No-Go Gate<span class="ni-badge" id="b-gonogo">MI-08</span></div>
+          <div class="ni" onclick="nav('runbook', this)"><span class="ni-icon">◱</span>Runbook & Repro<span class="ni-badge" id="b-runbook">ESC-08</span></div>
+          <div class="ni" onclick="nav('monitoring', this)"><span class="ni-icon">◉</span>Monitoring & Ops<span class="ni-badge" id="b-monitoring">ESC-07</span></div>
+          <div class="ni" onclick="nav('costbenefit', this)"><span class="ni-icon">◎</span>Cost & Benefit<span class="ni-badge" id="b-costbenefit">ESC-06</span></div>
+        </div>
+      </div>
+
+      <!-- MAIN -->
+      <div class="main" id="mainScroll">
+        <!-- ===== ANOTASI NLP ===== -->
+        <div class="panel active" id="panel-annotate">
+          <div class="ptitle">Anotasi NLP <span class="pref">WI-03 · WI-05</span></div>
+          <div class="psub">Input catatan klinis sintetis → lihat entity MedCAT dengan highlight, tooltip confidence, dan tabel lengkap</div>
+          <div class="ibox"><span class="ico">→</span>POST <code>/api/process</code> — gunakan synthetic note. Jangan gunakan data pasien nyata.</div>
+          <div class="card">
+            <div class="ctitle">Input catatan klinis</div>
+            <label>Pilih contoh sintetis</label>
+            <select onchange="loadSample(this.value)" style="margin-bottom: 10px">
+              <option value="">— pilih contoh —</option>
+              <option value="s1">Demam + paracetamol</option>
+              <option value="s2">Asma + salbutamol</option>
+              <option value="s3">Hipertensi + amlodipine</option>
+              <option value="s4">DM tipe 2 + metformin</option>
+              <option value="s5">Nyeri dada + nitrogliserin</option>
+              <option value="s6">Alergi penisilin</option>
+              <option value="s7">PPOK + salbutamol + tiotropium</option>
+              <option value="s8">Gagal jantung + furosemide</option>
+            </select>
+            <textarea id="annotInput" placeholder="Ketik atau pilih contoh sintetis..."></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 10px; align-items: center">
+              <button class="btn btn-p" onclick="runAnnotate()" id="btnAnnotate">Jalankan anotasi</button>
+              <button class="btn btn-g" onclick="clearAnnotate()">Bersihkan</button>
+              <span id="annotSp" style="display: none"><span class="sp"></span></span>
+              <span id="annotTime" style="font-family: var(--mono); font-size: 12px; color: var(--text3)"></span>
+            </div>
+          </div>
+          <div id="annotResult" style="display: none">
+            <div class="card">
+              <div class="ctitle">Teks dengan anotasi</div>
+              <div class="legend">
+                <div class="li">
+                  <div class="ld" style="background: var(--accent)"></div>
+                  Diagnosis/kondisi
+                </div>
+                <div class="li">
+                  <div class="ld" style="background: var(--accent2)"></div>
+                  Obat/terapi
+                </div>
+                <div class="li">
+                  <div class="ld" style="background: var(--warn)"></div>
+                  Prosedur
+                </div>
+                <div class="li">
+                  <div class="ld" style="background: var(--danger)"></div>
+                  Lainnya
+                </div>
+              </div>
+              <div class="etext" id="annotRendered"></div>
+            </div>
+            <div class="card">
+              <div class="ctitle">Tabel entity terdeteksi</div>
+              <div style="overflow-x: auto">
+                <table class="etab">
+                  <thead>
+                    <tr>
+                      <th>Teks asli</th>
+                      <th>Konsep</th>
+                      <th>CUI</th>
+                      <th>Tipe</th>
+                      <th>Confidence</th>
+                      <th>Span</th>
+                    </tr>
+                  </thead>
+                  <tbody id="entityTbody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ctitle">Raw JSON</div>
+              <div class="rbox ok" id="annotRaw"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== DE-IDENTIFICATION ===== -->
+        <div class="panel" id="panel-deident">
+          <div class="ptitle">De-identification <span class="pref">WI-07 · EI-04 · HI-03</span></div>
+          <div class="psub">Masking teks sensitif: nama, alamat, telepon, usia, No. RM</div>
+          <div class="ibox"><span class="ico">→</span>Deteksi PII dari teks sintetis lalu tampilkan teks sebelum dan sesudah masking.</div>
+          <div class="card">
+            <div class="ctitle">Input teks berisi data sensitif (sintetis)</div>
+            <select onchange="loadDeidentSample(this.value)" style="margin-bottom: 10px">
+              <option value="">— pilih contoh —</option>
+              <option value="d1">Profil pasien dasar</option>
+              <option value="d2">Catatan dengan telepon + usia</option>
+              <option value="d3">Discharge summary lengkap</option>
+              <option value="d4">Referral note dengan alamat lengkap</option>
+            </select>
+            <textarea id="deidentInput" placeholder="Teks berisi data PII sintetis...&#10;Contoh: Budi Santoso, 45 tahun, Jalan Melati 10 Yogyakarta, 0812-3456-7890"></textarea>
+            <div class="row2 gap">
+              <div>
+                <label>Mode masking</label>
+                <select id="maskMode">
+                  <option value="redact">[LABEL] — ganti dengan label tipe</option>
+                  <option value="replace">Nilai generik (nama fiktif)</option>
+                  <option value="highlight">Highlight saja (tampilkan)</option>
+                </select>
+              </div>
+              <div>
+                <label>Konsistensi — uji 3 variasi teks yang sama</label>
+                <select id="maskConsistency">
+                  <option value="single">Satu teks saja</option>
+                  <option value="triple">Bandingkan 3 variasi (uji EI-04)</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-p gap" onclick="runDeident()">Jalankan masking</button>
+            <span id="deidentSp" style="display: none; margin-left: 8px"><span class="sp"></span></span>
+          </div>
+          <div id="deidentResult" style="display: none">
+            <div class="row2">
+              <div class="card">
+                <div class="ctitle">Teks asli</div>
+                <div id="deidentOrig" style="font-size: 13px; line-height: 1.9; white-space: pre-wrap"></div>
+              </div>
+              <div class="card">
+                <div class="ctitle">Teks setelah masking</div>
+                <div id="deidentMasked" style="font-size: 13px; line-height: 1.9"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ctitle">PII terdeteksi</div>
+              <table class="etab">
+                <thead>
+                  <tr>
+                    <th>Teks asli</th>
+                    <th>Tipe PII</th>
+                    <th>Span</th>
+                    <th>Nilai pengganti</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="piiTbody"></tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="ctitle">Penilaian konsistensi masking (EI-04)</div>
+              <div class="mrow" id="deidentMetrics"></div>
+              <label class="gap">Catatan auditor</label>
+              <textarea id="deidentNotes" placeholder="Field apa yang tertangani? Yang masih lolos? Variasi penulisan yang tidak terdeteksi?"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TERMINOLOGY CHECKER ===== -->
+        <div class="panel" id="panel-terminology">
+          <div class="ptitle">Terminology Checker <span class="pref">WI-05 · EI-01 · EI-02 · EI-05</span></div>
+          <div class="psub">Uji apakah istilah/singkatan lokal Indonesia dikenali oleh MedCAT</div>
+          <div class="ibox"><span class="ico">→</span>Tiap istilah dikirm sebagai kalimat uji ke <code>/api/process</code>. Hasil dibandingkan dan diberi status coverage.</div>
+          <div class="card">
+            <div class="ctitle">Daftar istilah yang diuji</div>
+            <label>Istilah / singkatan (satu per baris, min 10 istilah per WI-05)</label>
+            <textarea
+              id="termInput"
+              style="min-height: 180px"
+              placeholder="sesak&#10;GDS&#10;BAB cair&#10;nyeri ulu hati&#10;riw DM&#10;MRS&#10;HT&#10;OAD&#10;batuk produktif&#10;edema tungkai&#10;hipertensi&#10;diabetes melitus"
+            ></textarea>
+            <div class="row2 gap">
+              <div>
+                <label>Template kalimat uji</label>
+                <input type="text" id="termTemplate" value="Pasien dengan {term}." />
+                <div style="font-size: 11px; color: var(--text3); margin-top: 4px">{term} diganti tiap istilah</div>
+              </div>
+              <div>
+                <label>Kategori uji</label>
+                <select id="termCategory">
+                  <option value="general">Umum (WI-05 / EI-01)</option>
+                  <option value="local">Istilah lokal Indonesia (EI-02)</option>
+                  <option value="rare">Konsep langka / subspesialis (EI-05)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px; align-items: center">
+              <button class="btn btn-p" onclick="runTerminology()">Jalankan semua uji</button>
+              <span id="termSp" style="display: none"><span class="sp"></span></span>
+              <span id="termProgress" style="font-size: 12px; font-family: var(--mono); color: var(--text3)"></span>
+            </div>
+          </div>
+          <div id="termResult" style="display: none">
+            <div class="mrow" id="termMetrics"></div>
+            <div class="card">
+              <div class="ctitle">Hasil per istilah</div>
+              <table class="etab">
+                <thead>
+                  <tr>
+                    <th>Istilah</th>
+                    <th>Entity terdeteksi</th>
+                    <th>Confidence</th>
+                    <th>Status coverage</th>
+                    <th>Catatan</th>
+                  </tr>
+                </thead>
+                <tbody id="termTbody"></tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="ctitle">Gap analysis & rekomendasi</div>
+              <div id="termGapAnalysis" style="font-size: 13px; line-height: 1.8"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== NOTE TYPE COMPARATOR ===== -->
+        <div class="panel" id="panel-notetype">
+          <div class="ptitle">Note Type Comparator <span class="pref">EI-03</span></div>
+          <div class="psub">Bandingkan hasil anotasi dari 3 jenis catatan klinis dengan topik yang sama</div>
+          <div class="card">
+            <div class="ctitle">Input 3 jenis note — topik klinis yang sama</div>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap">
+              <button class="btn btn-g" onclick="loadNoteTypeSample()">Muat contoh (DM + Hipertensi)</button>
+            </div>
+            <div class="row3">
+              <div>
+                <label>Progress Note</label>
+                <textarea id="ntProgress" placeholder="Catatan perkembangan harian..." style="min-height: 130px"></textarea>
+              </div>
+              <div>
+                <label>Discharge Summary</label>
+                <textarea id="ntDischarge" placeholder="Ringkasan pulang..." style="min-height: 130px"></textarea>
+              </div>
+              <div>
+                <label>Referral Note</label>
+                <textarea id="ntReferral" placeholder="Surat rujukan..." style="min-height: 130px"></textarea>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px; align-items: center">
+              <button class="btn btn-p" onclick="runNoteType()">Jalankan perbandingan</button>
+              <span id="ntSp" style="display: none"><span class="sp"></span></span>
+            </div>
+          </div>
+          <div id="ntResult" style="display: none">
+            <div class="mrow" id="ntMetrics"></div>
+            <div class="row3" id="ntCards"></div>
+            <div class="card">
+              <div class="ctitle">Kesimpulan stabilitas (EI-03)</div>
+              <div id="ntConclusion" style="font-size: 13px; line-height: 1.8; margin-bottom: 12px"></div>
+              <label>Catatan auditor</label>
+              <textarea id="ntNotes" placeholder="Note type mana yang paling stabil? Mana yang paling lemah? Apa penyebabnya?"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SAFETY ANNOTATOR ===== -->
+        <div class="panel" id="panel-safety">
+          <div class="ptitle">Safety Annotator <span class="pref">ESC-05</span></div>
+          <div class="psub">Uji anotasi pada konsep klinis sensitif patient safety — deteksi false positive / false negative yang berisiko</div>
+          <div class="wbox"><span class="ico">⚠</span>Semua teks harus sintetis. Fokus pada konsep yang salah anotasi dapat membahayakan pasien.</div>
+          <div class="card">
+            <div class="ctitle">Konsep sensitif yang diuji</div>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap">
+              <button class="btn btn-g" style="font-size: 11px" onclick="loadSafetySample('alergi')">Alergi obat</button>
+              <button class="btn btn-g" style="font-size: 11px" onclick="loadSafetySample('kontra')">Kontraindikasi</button>
+              <button class="btn btn-g" style="font-size: 11px" onclick="loadSafetySample('henti')">Obat dihentikan</button>
+              <button class="btn btn-g" style="font-size: 11px" onclick="loadSafetySample('dosis')">Dosis kritis</button>
+              <button class="btn btn-g" style="font-size: 11px" onclick="loadSafetySample('negasi')">Negasi (tidak ada)</button>
+            </div>
+            <div id="safetyRows">
+              <div class="srow" id="sr-0">
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px">
+                  <span style="font-family: var(--mono); font-size: 11px; color: var(--text3)">Kasus #1</span>
+                  <button class="btn btn-g" style="font-size: 10px; padding: 2px 8px" onclick="addSafetyRow()">+ Tambah kasus</button>
+                </div>
+                <textarea class="sr-text" placeholder="Contoh: Pasien alergi penisilin, tidak boleh diberi amoksisilin." style="min-height: 60px"></textarea>
+                <label class="gap">Konsep sensitif yang diharapkan terdeteksi</label>
+                <input type="text" class="sr-expected" placeholder="alergi, penisilin, amoksisilin" />
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px; align-items: center">
+              <button class="btn btn-p" onclick="runSafety()">Jalankan safety test</button>
+              <span id="safetySp" style="display: none"><span class="sp"></span></span>
+            </div>
+          </div>
+          <div id="safetyResult" style="display: none">
+            <div class="mrow" id="safetyMetrics"></div>
+            <div id="safetyCards"></div>
+            <div class="card">
+              <div class="ctitle">Memo risiko safety (ESC-05)</div>
+              <textarea id="safetyMemo" placeholder="Tandai: hasil mana yang masuk akal, mana yang perlu checkpoint manusia, dan bagaimana batas penggunaan aman dituliskan..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== EFFICIENCY ===== -->
+        <div class="panel" id="panel-efficiency">
+          <div class="ptitle">Manual vs NLP — Efficiency Test <span class="pref">ESC-03</span></div>
+          <div class="psub">Bandingkan waktu dan kelengkapan ekstraksi konsep secara manual vs bantuan MedCAT</div>
+          <div class="card">
+            <div class="ctitle">Langkah 1 — siapkan catatan & konsep target</div>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px">
+              <button class="btn btn-g" style="font-size: 11px" onclick="document.getElementById('effInput').value = SAMPLES.s3 + ' ' + SAMPLES.s4">Muat contoh catatan</button>
+            </div>
+            <textarea id="effInput" placeholder="Catatan klinis sintetis..."></textarea>
+            <label class="gap">Konsep yang dicari (satu per baris)</label>
+            <textarea id="effTargets" style="min-height: 70px" placeholder="diagnosis&#10;nama obat&#10;dosis&#10;frekuensi&#10;gejala utama"></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">Langkah 2 — ekstraksi manual + timer</div>
+            <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px">
+              <button class="btn btn-g" id="timerBtn" onclick="toggleTimer()">▶ Mulai timer</button>
+              <span class="timer-big" id="timerDisplay">00:00</span>
+              <button class="btn btn-g" onclick="resetTimer()" style="font-size: 11px">reset</button>
+            </div>
+            <textarea id="effManual" style="min-height: 80px" placeholder="Temuan manual Anda: Diagnosis: ..., Obat: ..., Dosis: ..."></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center">
+              <button class="btn btn-g" onclick="stopAndRecord()">⏹ Stop & catat waktu</button>
+              <span id="manualTimeRecorded" style="font-size: 12px; color: var(--accent); font-family: var(--mono)"></span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ctitle">Langkah 3 — jalankan NLP</div>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <button class="btn btn-p" onclick="runEfficiency()">Jalankan MedCAT</button>
+              <span id="effSp" style="display: none"><span class="sp"></span></span>
+              <span id="effNlpTime" style="font-family: var(--mono); font-size: 12px; color: var(--text3)"></span>
+            </div>
+          </div>
+          <div id="effResult" style="display: none">
+            <div class="mrow">
+              <div class="mcard">
+                <div class="mval" id="mManual">—</div>
+                <div class="mlbl">Waktu manual (detik)</div>
+              </div>
+              <div class="mcard">
+                <div class="mval" id="mNlp">—</div>
+                <div class="mlbl">Waktu NLP (ms)</div>
+              </div>
+              <div class="mcard">
+                <div class="mval" id="mCount">—</div>
+                <div class="mlbl">Entity NLP ditemukan</div>
+              </div>
+              <div class="mcard">
+                <div class="mval" id="mSaved">—</div>
+                <div class="mlbl">Penghematan waktu</div>
+              </div>
+            </div>
+            <div class="dgrid">
+              <div class="dpanel">
+                <div class="dtitle">TEMUAN MANUAL</div>
+                <div id="manualTokens" style="line-height: 2.2"></div>
+              </div>
+              <div class="dpanel">
+                <div class="dtitle">TEMUAN NLP (MedCAT)</div>
+                <div id="nlpTokens" style="line-height: 2.2"></div>
+              </div>
+            </div>
+            <div class="card" style="margin-top: 14px">
+              <div class="ctitle">Observasi auditor</div>
+              <textarea id="effObs" placeholder="Apakah NLP membantu? Entity apa yang di-miss? False positive yang ditemukan?"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== LATENCY ===== -->
+        <div class="panel" id="panel-latency">
+          <div class="ptitle">Latency Benchmark <span class="pref">ESC-01 · ESC-02</span></div>
+          <div class="psub">Ukur kecepatan respons API untuk single (/api/process) dan bulk (/api/process_bulk)</div>
+          <div class="card">
+            <div class="ctitle">Konfigurasi benchmark</div>
+            <div class="row3">
+              <div>
+                <label>Jumlah request</label
+                ><select id="latCount">
+                  <option value="3">3</option>
+                  <option value="5" selected>5</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
+              <div>
+                <label>Mode</label
+                ><select id="latMode">
+                  <option value="single">Single saja</option>
+                  <option value="bulk">Bulk saja</option>
+                  <option value="both">Keduanya (bandingkan)</option>
+                </select>
+              </div>
+              <div>
+                <label>Panjang teks</label
+                ><select id="latLength">
+                  <option value="short">Pendek (1 kalimat)</option>
+                  <option value="medium" selected>Sedang (3-5 kalimat)</option>
+                  <option value="long">Panjang (paragraf)</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-p" style="margin-top: 10px" onclick="runLatency()" id="btnLat">Jalankan benchmark</button>
+            <span id="latSp" style="display: none; margin-left: 8px"><span class="sp"></span></span>
+          </div>
+          <div id="latResult" style="display: none">
+            <div class="mrow" id="latMetrics"></div>
+            <div class="card">
+              <div class="ctitle">Latency per request (ms)</div>
+              <div class="lbars" id="latBars"></div>
+            </div>
+            <div class="card" id="bulkCard" style="display: none">
+              <div class="ctitle">Single vs Bulk</div>
+              <div class="dgrid">
+                <div class="dpanel">
+                  <div class="dtitle">SINGLE (total)</div>
+                  <div style="font-size: 28px; font-family: var(--mono); color: var(--accent)" id="singleTotal">—</div>
+                  <div style="font-size: 11px; color: var(--text3)" id="singleAvg">—</div>
+                </div>
+                <div class="dpanel">
+                  <div class="dtitle">BULK (total)</div>
+                  <div style="font-size: 28px; font-family: var(--mono); color: var(--accent2)" id="bulkTotal">—</div>
+                  <div style="font-size: 11px; color: var(--text3)" id="bulkAvg">—</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ctitle">Log detail</div>
+              <div class="rbox" id="latLog"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== NEGATIVE CASE ===== -->
+        <div class="panel" id="panel-negative">
+          <div class="ptitle">Negative Case Tester <span class="pref">ESC-04</span></div>
+          <div class="psub">Kirim payload yang sengaja salah — nilai apakah pesan error cukup jelas untuk pengguna baru</div>
+          <div class="card">
+            <div class="ctitle">Pilih skenario</div>
+            <div class="npre">
+              <div class="nchip act" onclick="loadNeg(this, 'empty')">Payload kosong</div>
+              <div class="nchip" onclick="loadNeg(this, 'malformed')">JSON malformed</div>
+              <div class="nchip" onclick="loadNeg(this, 'missing')">Field wajib hilang</div>
+              <div class="nchip" onclick="loadNeg(this, 'wrongtype')">Tipe data salah</div>
+              <div class="nchip" onclick="loadNeg(this, 'emptytext')">Teks kosong</div>
+              <div class="nchip" onclick="loadNeg(this, 'toolarge')">Payload sangat besar</div>
+              <div class="nchip" onclick="loadNeg(this, 'custom')">Custom</div>
+            </div>
+            <textarea id="negPayload" style="font-family: var(--mono); font-size: 12px; min-height: 90px">{}</textarea>
+            <div class="row2 gap">
+              <div>
+                <label>Endpoint</label
+                ><select id="negEndpoint">
+                  <option value="/api/process">POST /api/process</option>
+                  <option value="/api/process_bulk">POST /api/process_bulk</option>
+                  <option value="/api/info_bad">/api/info (path salah)</option>
+                </select>
+              </div>
+              <div style="padding-top: 20px">
+                <button class="btn btn-d" onclick="runNegative()">Kirim request</button><span id="negSp" style="display: none; margin-left: 8px"><span class="sp"></span></span>
+              </div>
+            </div>
+          </div>
+          <div id="negResult" style="display: none">
+            <div class="card">
+              <div class="ctitle">Response</div>
+              <div style="margin-bottom: 8px"><span class="hbadge" id="negBadge">—</span><span style="font-family: var(--mono); font-size: 12px; color: var(--text2)" id="negInfo"></span></div>
+              <div class="rbox" id="negRaw"></div>
+            </div>
+            <div class="card">
+              <div class="ctitle">Penilaian error handling</div>
+              <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap">
+                <button class="btn btn-g" id="rateJ" onclick="rateError('jelas')">✓ Pesan error jelas</button>
+                <button class="btn btn-g" id="rateB" onclick="rateError('bingung')">✗ Membingungkan</button>
+                <button class="btn btn-g" id="rateN" onclick="rateError('nihil')">⚠ Tidak ada pesan</button>
+              </div>
+              <textarea id="negNotes" placeholder="Apakah pengguna pemula bisa memahami kesalahannya? Apa yang kurang?"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SERVICE INFO ===== -->
+        <div class="panel" id="panel-serviceinfo">
+          <div class="ptitle">Service Info <span class="pref">WI-02 · UT-04</span></div>
+          <div class="psub">Informasi versi service dan model dari GET /api/info — traceability check</div>
+          <div class="card">
+            <button class="btn btn-p" onclick="fetchInfo()">GET /api/info</button>
+            <span id="infoSp" style="display: none; margin-left: 8px"><span class="sp"></span></span>
+          </div>
+          <div id="infoResult" style="display: none">
+            <div class="mrow" id="infoMetrics"></div>
+            <div class="card">
+              <div class="ctitle">Raw response</div>
+              <div class="rbox ok" id="infoRaw"></div>
+            </div>
+            <div class="card">
+              <div class="ctitle">Traceability check (UT-04)</div>
+              <div id="traceCheck"></div>
+              <label style="margin-top: 14px">Catatan auditor</label>
+              <textarea id="infoNotes" placeholder="Apakah hasil dapat dikaitkan ke versi service/model ini? Gap traceability apa yang ditemukan?"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== EXPLAINABILITY ===== -->
+        <div class="panel" id="panel-explainability">
+          <div class="ptitle">Explainability Review <span class="pref">UT-03</span></div>
+          <div class="psub">Review field JSON output satu per satu — nilai apakah dapat dijelaskan ke reviewer non-teknis</div>
+          <div class="ibox"><span class="ico">→</span>Jalankan anotasi dulu, lalu review tiap field output bersama orang kedua.</div>
+          <div class="card">
+            <div class="ctitle">Input & jalankan anotasi</div>
+            <textarea id="explainInput" placeholder="Catatan klinis sintetis...">Pasien hipertensi, minum amlodipine 5 mg setiap malam. Tekanan darah 145/90 mmHg.</textarea>
+            <div style="display: flex; gap: 8px; margin-top: 10px; align-items: center">
+              <button class="btn btn-p" onclick="runExplain()">Ambil output JSON</button>
+              <span id="explainSp" style="display: none"><span class="sp"></span></span>
+            </div>
+          </div>
+          <div id="explainResult" style="display: none">
+            <div class="card">
+              <div class="ctitle">Review field per entity — apakah dapat dijelaskan ke non-teknis?</div>
+              <div id="explainFields"></div>
+            </div>
+            <div class="card">
+              <div class="ctitle">Penilaian explainability keseluruhan</div>
+              <div class="mrow" id="explainMetrics"></div>
+              <label>Catatan auditor</label>
+              <textarea id="explainNotes" placeholder="Field mana yang paling membingungkan? Bagaimana menjelaskan confidence/acc ke dokter? Apakah reviewer kedua bisa memahami output ini?"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== WORKFLOW MAP ===== -->
+        <div class="panel" id="panel-workflow">
+          <div class="ptitle">Workflow Map <span class="pref">WI-01</span></div>
+          <div class="psub">Petakan posisi CogStack NLP dalam alur kerja klinis nyata di institusi Anda</div>
+          <div class="card">
+            <div class="ctitle">Identifikasi alur input → proses → output</div>
+            <div class="row2">
+              <div>
+                <label>Jenis input yang digunakan</label>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px">
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wi_progress" /> Progress note harian</label>
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wi_discharge" /> Discharge summary</label>
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wi_referral" /> Surat rujukan</label>
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wi_lab" /> Catatan laboratorium</label>
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wi_other" /> Lainnya</label>
+                </div>
+                <textarea id="wi_otherText" style="min-height: 50px; margin-top: 6px" placeholder="Jenis input lainnya..."></textarea>
+              </div>
+              <div>
+                <label>Output yang dihasilkan digunakan untuk</label>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px">
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wo_coding" /> ICD coding support</label>
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wo_cohort" /> Cohort discovery riset</label>
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wo_review" /> Review klinis manual</label>
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wo_enrich" /> Data enrichment</label>
+                  <label style="display: flex; gap: 8px; align-items: center; font-size: 13px"><input type="checkbox" id="wo_report" /> Pelaporan/reporting</label>
+                </div>
+              </div>
+            </div>
+            <hr class="sep" />
+            <label>Deskripsikan alur kerja yang sedang berlangsung saat ini (manual)</label>
+            <textarea id="wi_manual" placeholder="Contoh: Dokter menulis catatan di sistem → admin input diagnosa secara manual ke ICD → data dikompilasi per bulan..."></textarea>
+            <label class="gap">Deskripsikan alur kerja yang diharapkan setelah menggunakan CogStack NLP</label>
+            <textarea id="wi_future" placeholder="Contoh: Dokter menulis catatan → NLP otomatis mengekstrak konsep → reviewer verifikasi → output masuk ke sistem..."></textarea>
+            <label class="gap">Kondisi gagal: apakah alur ini dapat dijelaskan ke tenaga kesehatan non-teknis?</label>
+            <div style="display: flex; gap: 8px; margin-top: 6px">
+              <button class="btn btn-g" id="wfYes" onclick="setWF('ya')">✓ Ya, dapat dijelaskan</button>
+              <button class="btn btn-g" id="wfNo" onclick="setWF('tidak')">✗ Belum dapat dijelaskan</button>
+            </div>
+            <div id="wfStatus" style="font-size: 12px; margin-top: 8px; font-family: var(--mono)"></div>
+            <label class="gap">Catatan auditor (WI-01)</label>
+            <textarea id="wi_notes" placeholder="Bagaimana input diproses menjadi output yang relevan untuk workflow klinis?"></textarea>
+          </div>
+        </div>
+
+        <!-- ===== DOCKER READINESS ===== -->
+        <div class="panel" id="panel-docker">
+          <div class="ptitle">Docker Readiness <span class="pref">WI-06 · MI-01</span></div>
+          <div class="psub">Checklist kesiapan deployment Docker dan prasyarat teknis minimum</div>
+          <div class="card">
+            <div class="ctitle">Checklist prasyarat teknis (MI-01)</div>
+            <div class="cklist" id="dockerChecklist"></div>
+          </div>
+          <div class="card">
+            <div class="ctitle">Ringkasan startup sequence (WI-06)</div>
+            <label>Urutan langkah start service (5–8 langkah)</label>
+            <textarea
+              id="dockerStartup"
+              style="min-height: 150px; font-family: var(--mono); font-size: 12px"
+              placeholder="1. Pull image: docker pull cogstacksystems/medcat-service:latest&#10;2. Siapkan env file: cp .env.example .env&#10;3. Mount model: -v /path/model:/cat/models&#10;4. Set shared memory: --shm-size=4g&#10;5. Jalankan: docker run -p 5000:5000 ...&#10;6. Verifikasi: curl http://localhost:5000/api/info"
+            ></textarea>
+            <label class="gap">Apakah runbook ini dapat diikuti orang lain tanpa bantuan lisan?</label>
+            <div style="display: flex; gap: 8px; margin-top: 6px">
+              <button class="btn btn-g" id="rbYes" onclick="setRB('ya')">✓ Ya</button>
+              <button class="btn btn-g" id="rbNo" onclick="setRB('tidak')">✗ Belum</button>
+              <button class="btn btn-g" id="rbPartial" onclick="setRB('partial')">⚠ Partial</button>
+            </div>
+            <div id="rbStatus" style="font-size: 12px; margin-top: 8px; font-family: var(--mono)"></div>
+            <label class="gap">Catatan auditor</label>
+            <textarea id="dockerNotes" placeholder="Dependency mana yang tersembunyi? Gap apa yang masih ada?"></textarea>
+          </div>
+        </div>
+
+        <!-- ===== DEPENDENCY LISENSI ===== -->
+        <div class="panel" id="panel-licensing">
+          <div class="ptitle">Dependency Lisensi <span class="pref">MI-03</span></div>
+          <div class="psub">Register dependency yang berpotensi berlisensi atau memerlukan akses khusus</div>
+          <div class="card">
+            <div class="ctitle">Register dependency</div>
+            <div class="ibox"><span class="ico">→</span>Catat semua dependency terminology/model dari dokumentasi CogStack. Tandai yang berlisensi sebelum pilot berjalan.</div>
+            <table class="etab" style="margin-bottom: 12px">
+              <thead>
+                <tr>
+                  <th>Nama dependency</th>
+                  <th>Tipe</th>
+                  <th>Status lisensi</th>
+                  <th>Wajib sebelum pilot</th>
+                </tr>
+              </thead>
+              <tbody id="licTbody">
+                <tr>
+                  <td><input type="text" value="UMLS" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td>
+                    <select style="font-size: 12px; padding: 4px 6px">
+                      <option>Terminology</option>
+                      <option>Model pack</option>
+                      <option>Library</option>
+                      <option>API eksternal</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select style="font-size: 12px; padding: 4px 6px" onchange="colorLicRow(this)">
+                      <option value="bebas">Bebas / open</option>
+                      <option value="berbayar">Berbayar</option>
+                      <option value="terbatas" selected>Perlu approval</option>
+                      <option value="unknown">Belum diketahui</option>
+                    </select>
+                  </td>
+                  <td style="text-align: center"><input type="checkbox" checked /></td>
+                </tr>
+                <tr>
+                  <td><input type="text" value="SNOMED CT" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td>
+                    <select style="font-size: 12px; padding: 4px 6px">
+                      <option>Terminology</option>
+                      <option>Model pack</option>
+                      <option>Library</option>
+                      <option>API eksternal</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select style="font-size: 12px; padding: 4px 6px" onchange="colorLicRow(this)">
+                      <option value="bebas">Bebas / open</option>
+                      <option value="berbayar">Berbayar</option>
+                      <option value="terbatas" selected>Perlu approval</option>
+                      <option value="unknown">Belum diketahui</option>
+                    </select>
+                  </td>
+                  <td style="text-align: center"><input type="checkbox" checked /></td>
+                </tr>
+                <tr>
+                  <td><input type="text" value="MedCAT model pack" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td>
+                    <select style="font-size: 12px; padding: 4px 6px">
+                      <option>Terminology</option>
+                      <option selected>Model pack</option>
+                      <option>Library</option>
+                      <option>API eksternal</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select style="font-size: 12px; padding: 4px 6px" onchange="colorLicRow(this)">
+                      <option value="bebas" selected>Bebas / open</option>
+                      <option value="berbayar">Berbayar</option>
+                      <option value="terbatas">Perlu approval</option>
+                      <option value="unknown">Belum diketahui</option>
+                    </select>
+                  </td>
+                  <td style="text-align: center"><input type="checkbox" checked /></td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-g" style="font-size: 12px" onclick="addLicRow()">+ Tambah baris</button>
+            <label class="gap">Catatan auditor (MI-03)</label>
+            <textarea id="licNotes" placeholder="Dependency mana yang paling berisiko menghambat pilot? Langkah approval yang diperlukan?"></textarea>
+          </div>
+        </div>
+
+        <!-- ===== EQUITY & COVERAGE ===== -->
+        <div class="panel" id="panel-equity">
+          <div class="ptitle">Equity & Coverage <span class="pref">EI-01 · EI-05 · EI-06</span></div>
+          <div class="psub">Penilaian asumsi bahasa, coverage konsep langka, dan ketersediaan jalur mitigasi</div>
+          <div class="card">
+            <div class="ctitle">EI-01 — Asumsi bahasa dan terminology default</div>
+            <div class="row2">
+              <div>
+                <label>Bahasa default yang diasumsikan</label>
+                <select id="eqLang">
+                  <option>Inggris (default)</option>
+                  <option>Indonesia</option>
+                  <option>Campuran (code-switching)</option>
+                  <option>Belum diketahui</option>
+                </select>
+              </div>
+              <div>
+                <label>Terminology ontologi utama</label>
+                <select id="eqOnto">
+                  <option>UMLS</option>
+                  <option>SNOMED CT</option>
+                  <option>ICD-10</option>
+                  <option>Campuran</option>
+                  <option>Belum diketahui</option>
+                </select>
+              </div>
+            </div>
+            <label class="gap">Batas aman penggunaan untuk populasi lokal Indonesia</label>
+            <textarea
+              id="eqBoundary"
+              style="min-height: 70px"
+              placeholder="Contoh: Aman untuk clinical note berbahasa Inggris dengan terminologi standar. Belum aman untuk catatan campuran bahasa Indonesia/Inggris tanpa adaptasi..."
+            ></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">EI-05 — Coverage konsep langka</div>
+            <label>Daftar konsep langka / subspesialis yang diuji (satu per baris)</label>
+            <textarea
+              id="eqRare"
+              style="min-height: 100px"
+              placeholder="Thalasemia&#10;Lupus eritematosus sistemik&#10;Penyakit Kawasaki&#10;Sindrom Stevens-Johnson&#10;Hemofilia A&#10;Penyakit Wilson&#10;Sindrom Marfan&#10;Botulisme"
+            ></textarea>
+            <button class="btn btn-p gap" onclick="runRareCoverage()">Uji coverage via API</button>
+            <span id="rareSp" style="display: none; margin-left: 8px"><span class="sp"></span></span>
+            <div id="rareResult" style="display: none; margin-top: 12px">
+              <table class="etab">
+                <thead>
+                  <tr>
+                    <th>Konsep</th>
+                    <th>Terdeteksi</th>
+                    <th>Confidence</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="rareTbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ctitle">EI-06 — Jalur mitigasi (MedCAT Trainer)</div>
+            <div class="cklist">
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">MedCAT Trainer tersedia di repository</div>
+                  <div class="ckdesc">medcat-trainer/README.md dapat ditemukan dan dipahami</div>
+                  <div class="ckstatus">
+                    <button class="ckbtn" onclick="setCK(this, 'ada')" data-key="mt1">Ada</button>
+                    <button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="mt1">Tidak ada</button>
+                    <button class="ckbtn" onclick="setCK(this, 'partial')" data-key="mt1">Belum dicek</button>
+                  </div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Jalur custom training terdokumentasi</div>
+                  <div class="ckdesc">Ada panduan untuk melatih ulang model dengan data lokal</div>
+                  <div class="ckstatus">
+                    <button class="ckbtn" onclick="setCK(this, 'ada')" data-key="mt2">Ada</button>
+                    <button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="mt2">Tidak ada</button>
+                    <button class="ckbtn" onclick="setCK(this, 'partial')" data-key="mt2">Partial</button>
+                  </div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Domain expert tersedia untuk validasi lokal</div>
+                  <div class="ckdesc">Ada tenaga medis yang bisa memvalidasi hasil training</div>
+                  <div class="ckstatus">
+                    <button class="ckbtn" onclick="setCK(this, 'ada')" data-key="mt3">Ada</button>
+                    <button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="mt3">Tidak ada</button>
+                    <button class="ckbtn" onclick="setCK(this, 'partial')" data-key="mt3">Belum dipastikan</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <label class="gap">Catatan auditor (EI-06)</label>
+            <textarea id="eqMitigationNotes" placeholder="Langkah mitigasi yang realistis: siapa yang terlibat, kapan dipakai, effort minimum..."></textarea>
+          </div>
+        </div>
+
+        <!-- ===== HARM SCENARIO ===== -->
+        <div class="panel" id="panel-harm">
+          <div class="ptitle">Harm Scenario Mapper <span class="pref">HI-05</span></div>
+          <div class="psub">Petakan skenario harm bila hasil NLP salah atau terlalu dipercaya</div>
+          <div class="card">
+            <div class="ctitle">5 skenario harm — isi pemicu, dampak, dan kontrol pencegahan</div>
+            <div class="ibox"><span class="ico">→</span>Tiap baris adalah satu jalur harm. Fokus pada false positive, false negative, dan automation bias.</div>
+            <div style="overflow-x: auto">
+              <table class="rtab" id="harmTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Skenario harm</th>
+                    <th>Tipe</th>
+                    <th>Dampak (1-5)</th>
+                    <th>Pemicu</th>
+                    <th>Kontrol pencegahan</th>
+                  </tr>
+                </thead>
+                <tbody id="harmTbody"></tbody>
+              </table>
+            </div>
+            <button class="btn btn-g" style="font-size: 12px; margin-top: 10px" onclick="addHarmRow()">+ Tambah skenario</button>
+            <label class="gap">Harm path prioritas yang perlu ditindaklanjuti</label>
+            <textarea id="harmPriority" placeholder="Skenario harm mana yang paling kritis? Apa kontrol minimum yang harus ada sebelum pilot?"></textarea>
+          </div>
+        </div>
+
+        <!-- ===== USE CASE & KPI ===== -->
+        <div class="panel" id="panel-usecase">
+          <div class="ptitle">Use Case & KPI <span class="pref">HI-01 · HI-02 · HI-04 · HI-06 · HI-07</span></div>
+          <div class="psub">Pemetaan use case, KPI pilot, data enrichment, safe-use boundary, dan reproducibility</div>
+          <div class="card">
+            <div class="ctitle">HI-01 — Pemetaan use case yang masuk akal</div>
+            <div class="row2">
+              <div>
+                <label>Use case 1 — masalah manual yang diselesaikan</label>
+                <textarea id="uc1problem" style="min-height: 70px" placeholder="Contoh: Coding diagnosa ICD dilakukan manual, membutuhkan 15 menit per pasien..."></textarea>
+                <label class="gap">Cara NLP membantu</label>
+                <textarea id="uc1solution" style="min-height: 60px" placeholder="Contoh: NLP mengekstrak konsep diagnosa otomatis, reviewer hanya perlu verifikasi..."></textarea>
+              </div>
+              <div>
+                <label>Use case 2 — masalah manual yang diselesaikan</label>
+                <textarea id="uc2problem" style="min-height: 70px" placeholder="Contoh: Identifikasi pasien untuk penelitian dilakukan manual dari rekam medis..."></textarea>
+                <label class="gap">Cara NLP membantu</label>
+                <textarea id="uc2solution" style="min-height: 60px" placeholder="Contoh: NLP mengekstrak kriteria inklusi/eksklusi dari catatan klinis..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ctitle">HI-04 — KPI pilot yang realistis</div>
+            <div id="kpiRows">
+              <div class="harm-row" style="margin-bottom: 8px; grid-template-columns: 2fr 1fr 1fr">
+                <input type="text" value="Waktu review per note" placeholder="Nama KPI" style="font-size: 12px; padding: 5px 8px" />
+                <input type="text" value="Menit" placeholder="Satuan" style="font-size: 12px; padding: 5px 8px" />
+                <input type="text" value="Stopwatch + log" placeholder="Cara ukur" style="font-size: 12px; padding: 5px 8px" />
+              </div>
+            </div>
+            <button class="btn btn-g" style="font-size: 12px; margin-top: 6px" onclick="addKpiRow()">+ Tambah KPI</button>
+          </div>
+          <div class="card">
+            <div class="ctitle">HI-02 — Potensi data enrichment</div>
+            <label>Field terstruktur yang berpotensi diperkaya dari output NLP</label>
+            <textarea id="enrichFields" style="min-height: 80px" placeholder="Kolom diagnosis → dari entity dengan tipe kondisi&#10;Kolom obat → dari entity dengan tipe obat&#10;Kolom gejala → dari entity symptom..."></textarea>
+            <label class="gap">Risiko bila hasil NLP yang dipakai salah</label>
+            <textarea id="enrichRisk" style="min-height: 60px" placeholder="Data diagnosis yang salah dapat memengaruhi kualitas penelitian / coding..."></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">HI-06 — Safe-use boundary</div>
+            <label>Pernyataan batas aman penggunaan (siap pakai di laporan)</label>
+            <textarea
+              id="safeBoundary"
+              style="min-height: 90px"
+              placeholder="Tool ini digunakan sebagai decision support untuk membantu reviewer manusia, bukan sebagai pengganti judgement klinis. Hasil anotasi tidak boleh digunakan secara otonom untuk keputusan klinis tanpa verifikasi oleh tenaga kesehatan yang berwenang. Coverage terminology bergantung pada ontologi yang digunakan dan mungkin belum mencakup seluruh istilah lokal."
+            ></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">HI-07 — Reproducibility</div>
+            <div class="row2">
+              <div>
+                <label>Versi service yang digunakan</label>
+                <input type="text" id="reproVersion" placeholder="Ambil dari /api/info..." />
+              </div>
+              <div>
+                <label>Versi model yang digunakan</label>
+                <input type="text" id="reproModel" placeholder="Ambil dari /api/info..." />
+              </div>
+            </div>
+            <label class="gap">Config penting yang dicatat</label>
+            <textarea id="reproConfig" style="min-height: 70px; font-family: var(--mono); font-size: 12px" placeholder="APP_BULK_NPROC=4&#10;PORT=5000&#10;SHARED_MEMORY=4g"></textarea>
+            <label class="gap">Apakah orang lain dapat mengulang hasil ini dengan catatan di atas?</label>
+            <div style="display: flex; gap: 8px; margin-top: 6px">
+              <button class="btn btn-g" id="reprYes" onclick="setRepro('ya')">✓ Ya</button>
+              <button class="btn btn-g" id="reprNo" onclick="setRepro('tidak')">✗ Belum</button>
+            </div>
+            <div id="reproStatus" style="font-size: 12px; margin-top: 8px; font-family: var(--mono)"></div>
+          </div>
+        </div>
+
+        <!-- ===== GOVERNANCE & TRUST ===== -->
+        <div class="panel" id="panel-governance">
+          <div class="ptitle">Governance & Trust <span class="pref">MI-02 · UT-01 · UT-02 · UT-05 · UT-06 · UT-07</span></div>
+          <div class="psub">Prasyarat governance, dokumentasi API, human checkpoint, dan disclosure trust</div>
+          <div class="card">
+            <div class="ctitle">MI-02 — Prasyarat governance dan privasi</div>
+            <div class="cklist">
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Aturan synthetic-data-only ditetapkan</div>
+                  <div class="ckdesc">Seluruh pengujian menggunakan data sintetis, bukan data pasien nyata</div>
+                  <div class="ckstatus"><button class="ckbtn" onclick="setCK(this, 'ada')" data-key="g1">Sudah</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="g1">Belum</button></div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Approval penggunaan data nyata (bila diperlukan ke depan)</div>
+                  <div class="ckdesc">Pihak yang perlu menyetujui sudah diidentifikasi</div>
+                  <div class="ckstatus">
+                    <button class="ckbtn" onclick="setCK(this, 'ada')" data-key="g2">Sudah</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="g2">Belum</button
+                    ><button class="ckbtn" onclick="setCK(this, 'partial')" data-key="g2">Belum relevan</button>
+                  </div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Batas antara audit pembelajaran dan implementasi nyata jelas</div>
+                  <div class="ckdesc">Tim memahami perbedaan tahap pilot vs go-live</div>
+                  <div class="ckstatus"><button class="ckbtn" onclick="setCK(this, 'ada')" data-key="g3">Jelas</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="g3">Belum jelas</button></div>
+                </div>
+              </div>
+            </div>
+            <label class="gap">Catatan governance</label>
+            <textarea id="govNotes" placeholder="Apa yang perlu dilakukan sebelum menggunakan data pasien nyata?"></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">UT-01 — Checklist onboarding & instalasi</div>
+            <div class="cklist">
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">README dapat dipahami dalam 20 menit oleh auditor pemula</div>
+                  <div class="ckstatus"><button class="ckbtn" onclick="setCK(this, 'ada')" data-key="u1">Ya</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="u1">Tidak</button></div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Dependency utama teridentifikasi (Docker, Python, model file)</div>
+                  <div class="ckstatus">
+                    <button class="ckbtn" onclick="setCK(this, 'ada')" data-key="u2">Ya</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="u2">Tidak</button
+                    ><button class="ckbtn" onclick="setCK(this, 'partial')" data-key="u2">Partial</button>
+                  </div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Langkah awal pertama dapat diidentifikasi tanpa bantuan</div>
+                  <div class="ckstatus"><button class="ckbtn" onclick="setCK(this, 'ada')" data-key="u3">Ya</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="u3">Tidak</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ctitle">UT-02 — Cheat sheet dokumentasi API</div>
+            <label>Ringkasan 3 endpoint (isi berdasarkan review docs)</label>
+            <table class="etab" style="margin-bottom: 8px">
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Endpoint</th>
+                  <th>Payload minimum</th>
+                  <th>Response yang diharapkan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>GET</td>
+                  <td>/api/info</td>
+                  <td>—</td>
+                  <td><input type="text" value="Service name, version, model" style="font-size: 11px; padding: 3px 6px" /></td>
+                </tr>
+                <tr>
+                  <td>POST</td>
+                  <td>/api/process</td>
+                  <td><input type="text" value='{"content":[{"text":"..."}]}' style="font-size: 11px; padding: 3px 6px; font-family: var(--mono)" /></td>
+                  <td><input type="text" value="entities dengan cui, span, acc" style="font-size: 11px; padding: 3px 6px" /></td>
+                </tr>
+                <tr>
+                  <td>POST</td>
+                  <td>/api/process_bulk</td>
+                  <td><input type="text" value='{"content":[{"text":"..."},...]}' style="font-size: 11px; padding: 3px 6px; font-family: var(--mono)" /></td>
+                  <td><input type="text" value="entities untuk semua dokumen" style="font-size: 11px; padding: 3px 6px" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="ctitle">UT-05 — Human-in-the-loop checkpoint</div>
+            <label>Workflow target</label>
+            <input type="text" id="hitlWorkflow" placeholder="Contoh: Review note untuk ICD coding support" />
+            <label class="gap">Titik checkpoint (3-5 langkah)</label>
+            <textarea
+              id="hitlSteps"
+              style="min-height: 100px"
+              placeholder="1. NLP memproses note → ekstrak entitas&#10;2. Reviewer melihat hasil → verifikasi tiap entity&#10;3. Jika confidence < 0.7 → wajib cek manual&#10;4. Jika konsep sensitif (alergi, kontraindikasi) → selalu verifikasi&#10;5. Hasil yang sudah diverifikasi → masuk ke sistem"
+            ></textarea>
+            <label class="gap">Kriteria tolak output NLP (kapan hasil tidak boleh dipakai)</label>
+            <textarea id="hitlReject" style="min-height: 60px" placeholder="Contoh: Confidence < 0.5, entity tidak dapat ditemukan di teks asal, konsep klinis kritis..."></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">UT-06 — Nilai tutorial & materi belajar</div>
+            <div class="row2">
+              <div>
+                <label>Tutorial yang tersedia</label>
+                <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 4px">
+                  <label style="display: flex; gap: 8px; font-size: 13px"><input type="checkbox" id="tut_readme" /> README root</label>
+                  <label style="display: flex; gap: 8px; font-size: 13px"><input type="checkbox" id="tut_service" /> medcat-service README</label>
+                  <label style="display: flex; gap: 8px; font-size: 13px"><input type="checkbox" id="tut_docs" /> docs.cogstack.org</label>
+                  <label style="display: flex; gap: 8px; font-size: 13px"><input type="checkbox" id="tut_openapi" /> OpenAPI spec</label>
+                  <label style="display: flex; gap: 8px; font-size: 13px"><input type="checkbox" id="tut_example" /> Contoh payload</label>
+                </div>
+              </div>
+              <div>
+                <label>Nilai tutorial (1-5)</label>
+                <select id="tutScore">
+                  <option>1 — sangat kurang</option>
+                  <option>2 — kurang</option>
+                  <option>3 — cukup</option>
+                  <option selected>4 — baik</option>
+                  <option>5 — sangat baik</option>
+                </select>
+                <label class="gap">Gap utama yang ditemukan</label>
+                <textarea id="tutGap" style="min-height: 80px" placeholder="Bagian tutorial yang masih menyulitkan pengguna baru..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ctitle">UT-07 — Disclosure trust untuk laporan</div>
+            <label>5 kalimat disclosure (edit sesuai konteks)</label>
+            <div style="display: flex; flex-direction: column; gap: 8px" id="disclosureRows">
+              <textarea style="min-height: 50px">Tool ini digunakan sebagai decision support untuk membantu reviewer manusia, bukan pengganti penilaian klinis.</textarea>
+              <textarea style="min-height: 50px">Coverage terminology bergantung pada ontologi yang digunakan dan mungkin belum mencakup seluruh istilah klinis lokal Indonesia.</textarea>
+              <textarea style="min-height: 50px">Hasil anotasi tidak boleh digunakan secara otonom untuk keputusan klinis tanpa verifikasi tenaga kesehatan berwenang.</textarea>
+              <textarea style="min-height: 50px">Setiap hasil yang melibatkan konsep klinis sensitif (alergi, kontraindikasi, dosis kritis) wajib melalui review manusia.</textarea>
+              <textarea style="min-height: 50px">Pilot ini menggunakan data sintetis dan belum divalidasi untuk penggunaan pada data pasien nyata tanpa persetujuan yang sesuai.</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== RACI ===== -->
+        <div class="panel" id="panel-raci">
+          <div class="ptitle">RACI & Role Minimum <span class="pref">MI-04</span></div>
+          <div class="psub">Tetapkan role dan tanggung jawab minimum untuk tim pilot</div>
+          <div class="card">
+            <div class="ctitle">RACI ringkas tim pilot</div>
+            <table class="rtab">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Nama / jabatan</th>
+                  <th>Tanggung jawab utama</th>
+                  <th>Approval perubahan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="tag tg">Owner teknis</span></td>
+                  <td><input type="text" placeholder="Nama / jabatan" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td><input type="text" value="Deployment, maintenance, monitoring Docker" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td style="text-align: center"><input type="checkbox" checked /></td>
+                </tr>
+                <tr>
+                  <td><span class="tag tb">Reviewer domain</span></td>
+                  <td><input type="text" placeholder="Nama / jabatan" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td><input type="text" value="Validasi hasil anotasi secara klinis" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td style="text-align: center"><input type="checkbox" /></td>
+                </tr>
+                <tr>
+                  <td><span class="tag tw">Reviewer privasi</span></td>
+                  <td><input type="text" placeholder="Nama / jabatan" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td><input type="text" value="Pastikan hanya synthetic data, governance terpenuhi" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td style="text-align: center"><input type="checkbox" checked /></td>
+                </tr>
+                <tr>
+                  <td><span class="tag tr">PJ laporan</span></td>
+                  <td><input type="text" placeholder="Nama / jabatan" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td><input type="text" value="Konsolidasi temuan, penyusunan laporan akhir" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td style="text-align: center"><input type="checkbox" /></td>
+                </tr>
+                <tr>
+                  <td><span class="tag tgr">Reviewer IT</span></td>
+                  <td><input type="text" placeholder="Nama / jabatan" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td><input type="text" value="Infrastruktur, keamanan jaringan, monitoring" style="font-size: 12px; padding: 4px 8px" /></td>
+                  <td style="text-align: center"><input type="checkbox" /></td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-g" style="font-size: 12px; margin-top: 10px" onclick="addRACIRow()">+ Tambah role</button>
+            <label class="gap">Catatan auditor (MI-04)</label>
+            <textarea id="raciNotes" placeholder="Apakah semua role terisi? Siapa yang bertindak saat terjadi insiden di luar jam kerja?"></textarea>
+          </div>
+        </div>
+
+        <!-- ===== GO / NO-GO ===== -->
+        <div class="panel" id="panel-gonogo">
+          <div class="ptitle">Go / No-Go Gate <span class="pref">MI-08 · MI-05 · MI-06 · MI-07</span></div>
+          <div class="psub">5 syarat minimum sebelum pilot dijalankan — bedakan go, conditional go, dan no-go</div>
+          <div class="card">
+            <div class="ctitle">MI-05 — Dependency integrasi hulu dan hilir</div>
+            <label>Sistem yang memberi input ke CogStack NLP</label>
+            <textarea id="depInput" style="min-height: 60px" placeholder="Contoh: HIS rumah sakit → export note sebagai plain text → dikirim ke API..."></textarea>
+            <label class="gap">Sistem yang menerima output NLP</label>
+            <textarea id="depOutput" style="min-height: 60px" placeholder="Contoh: Spreadsheet reviewer → dashboard coding → database riset..."></textarea>
+            <label class="gap">Dependency kritis yang belum memiliki owner atau spesifikasi</label>
+            <textarea id="depGap" style="min-height: 50px" placeholder="Contoh: Format handoff dari HIS ke API belum didefinisikan..."></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">MI-06 — Change control dasar</div>
+            <label>Perubahan yang memerlukan approval dan uji ulang</label>
+            <textarea
+              id="changeControl"
+              style="min-height: 80px"
+              placeholder="1. Penggantian model pack → perlu approval owner teknis + reviewer domain + uji ulang accuracy&#10;2. Perubahan ENV (threshold, port) → perlu approval owner teknis + smoke test&#10;3. Upgrade versi service → perlu smoke test + review changelog..."
+            ></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">MI-07 — Ownership monitoring & incident</div>
+            <div class="row3">
+              <div><label>PJ monitoring metrics/logs</label><input type="text" id="monOwner" placeholder="Nama / role" /></div>
+              <div><label>PJ response saat error</label><input type="text" id="errOwner" placeholder="Nama / role" /></div>
+              <div><label>PJ komunikasi ke stakeholder</label><input type="text" id="comOwner" placeholder="Nama / role" /></div>
+            </div>
+            <label class="gap">Respons minimum saat service error</label>
+            <textarea id="incidentResp" style="min-height: 60px" placeholder="1. Cek log container → 2. Restart service → 3. Notifikasi tim → 4. Eskalasi jika >30 menit..."></textarea>
+          </div>
+          <div class="card">
+            <div class="ctitle">MI-08 — Gate go / no-go</div>
+            <div id="gonogoChecklist" class="cklist"></div>
+            <div id="gonogoVerdict" style="margin-top: 16px; padding: 14px; border-radius: 6px; font-size: 14px; font-family: var(--mono); display: none"></div>
+            <button class="btn btn-p" style="margin-top: 12px" onclick="calcGonogo()">Hitung verdict</button>
+          </div>
+        </div>
+
+        <!-- ===== RUNBOOK ===== -->
+        <div class="panel" id="panel-runbook">
+          <div class="ptitle">Runbook & Reproducibility <span class="pref">ESC-08 · HI-07</span></div>
+          <div class="psub">Susun runbook operasional yang dapat diulang orang lain tanpa bantuan lisan</div>
+          <div class="card">
+            <div class="ctitle">ESC-08 — Runbook operasional harian</div>
+            <label>Langkah-langkah operasi dasar (start → health check → test → simpan bukti)</label>
+            <textarea
+              id="runbookSteps"
+              style="min-height: 200px; font-family: var(--mono); font-size: 12px"
+              placeholder='RUNBOOK CogStack NLP — Operasi Dasar&#10;Ditulis oleh: [nama]  |  Tanggal: [tanggal]  |  Versi service: [versi]&#10;&#10;1. START SERVICE&#10;   cd /path/to/medcat-service&#10;   docker compose up -d&#10;   # Tunggu 30-60 detik&#10;&#10;2. HEALTH CHECK&#10;   curl http://localhost:5000/api/info&#10;   # Pastikan response status: ok&#10;&#10;3. SMOKE TEST&#10;   curl -X POST http://localhost:5000/api/process \&#10;     -H &apos;Content-Type: application/json&apos; \&#10;     -d &apos;{"content": [{"text": "Pasien hipertensi."}]}&apos;&#10;   # Pastikan ada entities dalam response&#10;&#10;4. SIMPAN BUKTI&#10;   Screenshot response ke folder: /bukti/[tanggal]/'
+            ></textarea>
+            <label class="gap">Reviewer kedua — apakah runbook ini dapat diikuti tanpa bantuan?</label>
+            <div style="display: flex; gap: 8px; margin-top: 6px">
+              <button class="btn btn-g" id="rbr1" onclick="setRBR('ya')">✓ Ya, dapat diikuti</button>
+              <button class="btn btn-g" id="rbr2" onclick="setRBR('partial')">⚠ Perlu klarifikasi kecil</button>
+              <button class="btn btn-g" id="rbr3" onclick="setRBR('tidak')">✗ Masih perlu bantuan lisan</button>
+            </div>
+            <div id="rbrStatus" style="font-size: 12px; margin-top: 8px; font-family: var(--mono)"></div>
+            <label class="gap">Catatan reviewer kedua</label>
+            <textarea id="runbookReview" placeholder="Langkah mana yang masih membingungkan? Apa yang perlu ditambahkan?"></textarea>
+          </div>
+        </div>
+
+        <!-- ===== MONITORING ===== -->
+        <div class="panel" id="panel-monitoring">
+          <div class="ptitle">Monitoring & Ops <span class="pref">ESC-07</span></div>
+          <div class="psub">Penilaian dukungan monitoring dasar — signal minimum untuk tim kecil</div>
+          <div class="card">
+            <div class="ctitle">Review konfigurasi monitoring dari README</div>
+            <div class="cklist">
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">APP_ENABLE_METRICS tersedia di config</div>
+                  <div class="ckdesc">Switch untuk mengaktifkan metrics/telemetry</div>
+                  <div class="ckstatus">
+                    <button class="ckbtn" onclick="setCK(this, 'ada')" data-key="m1">Ada</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="m1">Tidak ada</button
+                    ><button class="ckbtn" onclick="setCK(this, 'partial')" data-key="m1">Belum dicek</button>
+                  </div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Log dasar tersedia (stdout/stderr container)</div>
+                  <div class="ckdesc">Error dan warning dapat dilihat dari docker logs</div>
+                  <div class="ckstatus"><button class="ckbtn" onclick="setCK(this, 'ada')" data-key="m2">Ada</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="m2">Tidak ada</button></div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Health endpoint tersedia (/api/info atau /health)</div>
+                  <div class="ckdesc">Dapat digunakan untuk monitoring service hidup</div>
+                  <div class="ckstatus"><button class="ckbtn" onclick="setCK(this, 'ada')" data-key="m3">Ada</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="m3">Tidak ada</button></div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Request count dapat dipantau</div>
+                  <div class="ckdesc">Ada cara untuk melihat volume request masuk</div>
+                  <div class="ckstatus">
+                    <button class="ckbtn" onclick="setCK(this, 'ada')" data-key="m4">Ada</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="m4">Tidak ada</button
+                    ><button class="ckbtn" onclick="setCK(this, 'partial')" data-key="m4">Partial</button>
+                  </div>
+                </div>
+              </div>
+              <div class="ckitem">
+                <div class="ckmain">
+                  <div class="cklbl">Tracing variables tersedia</div>
+                  <div class="ckdesc">Misal: JAEGER_HOST, OTEL_EXPORTER atau sejenisnya</div>
+                  <div class="ckstatus">
+                    <button class="ckbtn" onclick="setCK(this, 'ada')" data-key="m5">Ada</button><button class="ckbtn" onclick="setCK(this, 'tidak')" data-key="m5">Tidak ada</button
+                    ><button class="ckbtn" onclick="setCK(this, 'partial')" data-key="m5">Belum dicek</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <label class="gap">3 sinyal operasional minimum yang tersedia</label>
+            <textarea id="monSignals" placeholder="1. Service hidup: GET /api/info mengembalikan 200&#10;2. Error terlihat: docker logs menampilkan error message&#10;3. Request dapat dihitung: ..."></textarea>
+            <label class="gap">Catatan auditor (ESC-07)</label>
+            <textarea id="monNotes" placeholder="Apakah tim kecil memiliki cara sederhana untuk mengetahui layanan error atau beban meningkat?"></textarea>
+          </div>
+        </div>
+
+        <!-- ===== COST & BENEFIT ===== -->
+        <div class="panel" id="panel-costbenefit">
+          <div class="ptitle">Cost & Benefit <span class="pref">ESC-06</span></div>
+          <div class="psub">Estimasi biaya pilot yang sederhana dan jujur</div>
+          <div class="card">
+            <div class="ctitle">Skenario pilot 1 minggu</div>
+            <table class="rtab">
+              <thead>
+                <tr>
+                  <th>Komponen biaya</th>
+                  <th>Satuan</th>
+                  <th>Jumlah</th>
+                  <th>Estimasi biaya</th>
+                  <th>Catatan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Waktu reviewer teknis</td>
+                  <td>Jam</td>
+                  <td><input type="text" value="16" style="font-size: 12px; padding: 3px 8px; width: 60px" /></td>
+                  <td><input type="text" placeholder="Rp..." style="font-size: 12px; padding: 3px 8px" /></td>
+                  <td><input type="text" placeholder="2 hari kerja" style="font-size: 12px; padding: 3px 8px" /></td>
+                </tr>
+                <tr>
+                  <td>Waktu reviewer domain (dokter/klinisi)</td>
+                  <td>Jam</td>
+                  <td><input type="text" value="8" style="font-size: 12px; padding: 3px 8px; width: 60px" /></td>
+                  <td><input type="text" placeholder="Rp..." style="font-size: 12px; padding: 3px 8px" /></td>
+                  <td><input type="text" placeholder="1 hari kerja" style="font-size: 12px; padding: 3px 8px" /></td>
+                </tr>
+                <tr>
+                  <td>Server / laptop (sewa atau pakai yang ada)</td>
+                  <td>Unit</td>
+                  <td><input type="text" value="1" style="font-size: 12px; padding: 3px 8px; width: 60px" /></td>
+                  <td><input type="text" placeholder="Rp..." style="font-size: 12px; padding: 3px 8px" /></td>
+                  <td><input type="text" placeholder="Min 8GB RAM, GPU opsional" style="font-size: 12px; padding: 3px 8px" /></td>
+                </tr>
+                <tr>
+                  <td>Lisensi terminology (UMLS/SNOMED)</td>
+                  <td>-</td>
+                  <td><input type="text" value="-" style="font-size: 12px; padding: 3px 8px; width: 60px" /></td>
+                  <td><input type="text" placeholder="Rp..." style="font-size: 12px; padding: 3px 8px" /></td>
+                  <td><input type="text" placeholder="Perlu cek lisensi" style="font-size: 12px; padding: 3px 8px" /></td>
+                </tr>
+                <tr>
+                  <td>Model pack (jika berbayar)</td>
+                  <td>-</td>
+                  <td><input type="text" value="-" style="font-size: 12px; padding: 3px 8px; width: 60px" /></td>
+                  <td><input type="text" placeholder="Rp..." style="font-size: 12px; padding: 3px 8px" /></td>
+                  <td><input type="text" placeholder="Cek di repository" style="font-size: 12px; padding: 3px 8px" /></td>
+                </tr>
+                <tr>
+                  <td>Waktu koreksi manual (overhead)</td>
+                  <td>Jam</td>
+                  <td><input type="text" value="4" style="font-size: 12px; padding: 3px 8px; width: 60px" /></td>
+                  <td><input type="text" placeholder="Rp..." style="font-size: 12px; padding: 3px 8px" /></td>
+                  <td><input type="text" placeholder="Estimasi 20% dari waktu review" style="font-size: 12px; padding: 3px 8px" /></td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-g" style="font-size: 12px; margin-top: 8px" onclick="addCostRow()">+ Tambah komponen</button>
+            <hr class="sep" />
+            <label>Kesimpulan: apakah pilot masih masuk akal secara biaya?</label>
+            <div style="display: flex; gap: 8px; margin-top: 6px">
+              <button class="btn btn-g" id="costYes" onclick="setCostVerdict('ya')">✓ Ya, layak</button>
+              <button class="btn btn-g" id="costPart" onclick="setCostVerdict('conditional')">⚠ Conditional</button>
+              <button class="btn btn-g" id="costNo" onclick="setCostVerdict('tidak')">✗ Belum layak</button>
+            </div>
+            <div id="costStatus" style="font-size: 12px; margin-top: 8px; font-family: var(--mono)"></div>
+            <label class="gap">Catatan auditor (ESC-06)</label>
+            <textarea id="costNotes" placeholder="Asumsi biaya yang paling penting? Komponen mana yang belum bisa diestimasi? Perbandingan dengan nilai yang diharapkan?"></textarea>
+          </div>
+        </div>
+      </div>
+      <!-- /main -->
+    </div>
+    <!-- /shell -->
+
+    <script>
+      // ========== DATA ==========
+      const SAMPLES = {
+        s1: "Pasien datang dengan keluhan demam 3 hari, batuk kering, dan pilek. Dokter memberikan paracetamol 500 mg tiga kali sehari dan anjuran istirahat cukup.",
+        s2: "Pasien asma, menggunakan salbutamol inhaler bila sesak. Riwayat rawat inap karena serangan asma berat 2 tahun lalu. Saat ini dalam kondisi stabil.",
+        s3: "Pasien hipertensi stage 1, minum amlodipine 5 mg setiap malam hari. Tekanan darah terakhir 145/90 mmHg. Dianjurkan kontrol rutin tiap bulan.",
+        s4: "Pasien diabetes melitus tipe 2, mendapat terapi metformin 500 mg dua kali sehari. Gula darah sewaktu 210 mg/dL. Disarankan diet rendah karbohidrat.",
+        s5: "Pasien datang dengan nyeri dada kiri menjalar ke lengan. Diberikan nitrogliserin sublingual dengan respons baik. Dirujuk ke kardiologi untuk evaluasi lebih lanjut.",
+        s6: "Pasien alergi penisilin. Terdapat riwayat reaksi anafilaksis 5 tahun lalu. Obat antibiotik yang dipilih diganti dengan azithromycin 500 mg selama 3 hari.",
+        s7: "Pasien PPOK dengan eksaserbasi ringan. Mendapat terapi salbutamol nebulisasi dan tiotropium inhalasi. Saturasi oksigen 94%. Rencana rawat jalan dengan kontrol seminggu.",
+        s8: "Pasien gagal jantung kongestif EF 35%. Mendapat furosemide 40 mg, spironolakton 25 mg, dan bisoprolol 2.5 mg. Edema tungkai berkurang. Rencana ekokardiografi ulang.",
+      };
+      const DEIDENT_SAMPLES = {
+        d1: "Budi Santoso, laki-laki 45 tahun, datang ke poli interna. Berdomisili di Jalan Melati 10, Yogyakarta. Dapat dihubungi di nomor 0812-3456-7890.",
+        d2: "Siti Rahayu (38 tahun) dirujuk dari Puskesmas Gondokusuman. Alamat: Jl. Cendana 5 RT 02 RW 04, Sleman. HP: 0857-1234-5678. No RM: 001234.",
+        d3: "Discharge summary — Pasien: Agus Wijaya, 60 tahun, No RM 009876. Masuk 10 April 2026 dengan diagnosis infark miokard akut. Dirawat 5 hari. Kontak keluarga: Dewi Wijaya (istri) 0811-9988-7766. Alamat: Perumahan Seturan Blok C No 3, Yogyakarta.",
+        d4: "Kepada Yth. dr. Hendra Kusuma di RSUD Kota. Dengan hormat, kami merujuk pasien Tn. Darmawan, 52 tahun, alamat Jl. Kaliurang Km 8 No 15, Sleman, No RM 045678. Pasien didiagnosis dengan chronic kidney disease stage 3.",
+      };
+      const NEG_PAYLOADS = {
+        empty: "{}",
+        malformed: '{"content": [{"text": "test"',
+        missing: '{"wrong_key": "no content field"}',
+        wrongtype: '{"content": 12345}',
+        emptytext: '{"content": [{"text": ""}]}',
+        toolarge: '{"content": [{"text": "' + "x".repeat(50000) + '"}]}',
+        custom: '{\n  "content": [\n    {\n      "text": "Pasien hipertensi."\n    }\n  ]\n}',
+      };
+      const SAFETY_SAMPLES = {
+        alergi: ["Pasien alergi penisilin. Riwayat anafilaksis 5 tahun lalu.", "alergi, penisilin"],
+        kontra: ["Pasien gagal ginjal berat. Metformin merupakan kontraindikasi pada kondisi ini.", "metformin, kontraindikasi, gagal ginjal"],
+        henti: ["Warfarin dihentikan 5 hari sebelum operasi atas saran dokter.", "warfarin, dihentikan, operasi"],
+        dosis: ["Pasien mendapat morfin 10 mg IV setiap 4 jam untuk nyeri akut berat.", "morfin, 10 mg, IV"],
+        negasi: ["Tidak ada riwayat diabetes mellitus. Tidak ada hipertensi.", "tidak ada, diabetes, hipertensi"],
+      };
+      const DOCKER_CHECKLIST_ITEMS = [
+        { key: "d1", label: "Docker tersedia dan berjalan", desc: "docker --version mengembalikan output" },
+        { key: "d2", label: "Image CogStack dapat di-pull", desc: "docker pull cogstacksystems/medcat-service:latest" },
+        { key: "d3", label: "File model tersedia", desc: "File .dat atau model pack sudah diunduh dan path diketahui" },
+        { key: "d4", label: "File env (.env) siap", desc: ".env sudah dikonfigurasi dari template .env.example" },
+        { key: "d5", label: "Port 5000 tidak konflik", desc: "Tidak ada service lain menggunakan port 5000" },
+        { key: "d6", label: "Shared memory dikonfigurasi", desc: "--shm-size minimal 4g sudah ditetapkan" },
+        { key: "d7", label: "Koneksi network tersedia", desc: "Container dapat menerima request dari host" },
+        { key: "d8", label: "Smoke test /api/info lolos", desc: "GET /api/info mengembalikan HTTP 200" },
+      ];
+      const GONOGO_ITEMS = [
+        { key: "gg1", label: "Smoke test lolos", desc: "/api/info dan /api/process memberikan response 200", critical: true },
+        { key: "gg2", label: "Limitation log ada", desc: "Daftar keterbatasan sistem sudah didokumentasikan", critical: true },
+        { key: "gg3", label: "Approval internal jelas", desc: "Siapa yang menyetujui pilot sudah diidentifikasi", critical: true },
+        { key: "gg4", label: "Reviewer tersedia", desc: "Owner teknis dan reviewer domain sudah ditetapkan", critical: true },
+        { key: "gg5", label: "KPI pilot siap", desc: "Minimal 4 KPI sudah didefinisikan dengan cara ukur", critical: true },
+        { key: "gg6", label: "Governance synthetic-data-only aktif", desc: "Semua pengujian menggunakan data sintetis", critical: false },
+        { key: "gg7", label: "Human checkpoint terdefinisi", desc: "Titik review manual sudah ditetapkan dalam workflow", critical: false },
+      ];
+
+      // ========== NAV ==========
+      function nav(id, el) {
+        document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+        document.querySelectorAll(".ni").forEach((n) => n.classList.remove("active"));
+        document.getElementById("panel-" + id).classList.add("active");
+        if (el) el.classList.add("active");
+        document.getElementById("mainScroll").scrollTop = 0;
+      }
+
+      // ========== API ==========
+      function getBase() {
+        return document.getElementById("apiBase").value.trim().replace(/\/$/, "");
+      }
+      async function apiCall(ep, method = "GET", body = null) {
+        const url = getBase() + ep;
+        const opts = { method, headers: {} };
+        if (body !== null) {
+          opts.headers["Content-Type"] = "application/json";
+          opts.body = typeof body === "string" ? body : JSON.stringify(body);
+        }
+        const t0 = performance.now();
+        const res = await fetch(url, opts);
+        const ms = Math.round(performance.now() - t0);
+        let data;
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = await res.text().catch(() => "");
+        }
+        return { status: res.status, data, ms };
+      }
+      async function pingApi() {
+        const dot = document.getElementById("sdot"),
+          lbl = document.getElementById("slabel");
+        dot.className = "sdot";
+        lbl.textContent = "pinging...";
+        try {
+          const r = await apiCall("/api/info");
+          if (r.status === 200) {
+            dot.className = "sdot ok";
+            lbl.textContent = "ok " + r.ms + "ms";
+          } else {
+            dot.className = "sdot err";
+            lbl.textContent = r.status;
+          }
+        } catch (e) {
+          dot.className = "sdot err";
+          lbl.textContent = "unreachable";
+        }
+      }
+      function eh(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      // ========== PROGRESS TRACKING ==========
+      const panelDone = {};
+      function markDone(panel) {
+        panelDone[panel] = true;
+        const badge = document.getElementById("b-" + panel);
+        if (badge) badge.classList.add("done");
+        const done = Object.keys(panelDone).length;
+        // estimate: 20 panels cover ~44 test cases
+        const tc = Math.min(44, Math.round((done / 20) * 44));
+        document.getElementById("progressPill").textContent = tc + " / 44 selesai";
+      }
+
+      // ========== ANNOTATE ==========
+      function loadSample(k) {
+        if (k) document.getElementById("annotInput").value = SAMPLES[k];
+      }
+      function clearAnnotate() {
+        document.getElementById("annotInput").value = "";
+        document.getElementById("annotResult").style.display = "none";
+        document.getElementById("annotTime").textContent = "";
+      }
+      async function runAnnotate() {
+        const text = document.getElementById("annotInput").value.trim();
+        if (!text) return;
+        const btn = document.getElementById("btnAnnotate");
+        btn.disabled = true;
+        document.getElementById("annotSp").style.display = "inline";
+        document.getElementById("annotResult").style.display = "none";
+        try {
+          const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+          document.getElementById("annotTime").textContent = r.ms + "ms";
+          document.getElementById("annotRaw").textContent = JSON.stringify(r.data, null, 2);
+          renderAnnotations(text, r.data);
+          document.getElementById("annotResult").style.display = "block";
+          markDone("annotate");
+        } catch (e) {
+          document.getElementById("annotRaw").textContent = "Error: " + e.message;
+          document.getElementById("annotRaw").className = "rbox err";
+          document.getElementById("annotResult").style.display = "block";
+        }
+        btn.disabled = false;
+        document.getElementById("annotSp").style.display = "none";
+      }
+      function renderAnnotations(text, data) {
+        let entities = [];
+        if (data && data.result) {
+          const docs = Object.values(data.result);
+          if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
+        }
+        entities.sort((a, b) => (a.start || 0) - (b.start || 0));
+        let html = "",
+          pos = 0;
+        const types = ["0", "1", "2", "3"];
+        entities.forEach((e, i) => {
+          const s = e.start || 0,
+            en = e.end || 0;
+          if (s >= pos) {
+            html += eh(text.slice(pos, s));
+            const acc = e.acc !== undefined ? (e.acc * 100).toFixed(0) : "?";
+            html += `<span class="ec" data-t="${i % 4}">${eh(text.slice(s, en))}<span class="ett"><div class="ttr"><span>Konsep</span><span class="tv">${eh(e.pretty_name || e.detected_name || "?")}</span></div><div class="ttr"><span>CUI</span><span class="tv">${e.cui || "?"}</span></div><div class="ttr"><span>Confidence</span><span class="tv">${acc}%</span></div><div class="ttr"><span>Span</span><span class="tv">[${s},${en}]</span></div></span></span>`;
+            pos = en;
+          }
+        });
+        html += eh(text.slice(pos));
+        document.getElementById("annotRendered").innerHTML = html;
+        const tbody = document.getElementById("entityTbody");
+        const tags = ['<span class="tag tg">Diagnosis</span>', '<span class="tag tb">Obat</span>', '<span class="tag tw">Prosedur</span>', '<span class="tag tr">Lainnya</span>'];
+        tbody.innerHTML = entities.length
+          ? entities
+              .map((e, i) => {
+                const acc = e.acc != null ? e.acc : null;
+                return `<tr><td>${eh(e.detected_name || "")}</td><td>${eh(e.pretty_name || "")}</td><td style="color:var(--text3)">${e.cui || "—"}</td><td>${tags[i % 4]}</td><td><div>${acc != null ? (acc * 100).toFixed(1) + "%" : "?"}</div><div class="abar"><div class="afill" style="width:${acc != null ? acc * 100 : 0}%"></div></div></td><td style="color:var(--text3)">[${e.start || 0},${e.end || 0}]</td></tr>`;
+              })
+              .join("")
+          : '<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:14px">Tidak ada entity terdeteksi</td></tr>';
+      }
+
+      // ========== DEIDENT ==========
+      function loadDeidentSample(k) {
+        if (k) document.getElementById("deidentInput").value = DEIDENT_SAMPLES[k];
+      }
+      function detectPII(text) {
+        const patterns = [
+          { type: "Nama", re: /\b([A-Z][a-z]+ (?:[A-Z][a-z]+ ?){1,2})/g, replace: "[NAMA]" },
+          { type: "Telepon", re: /\b(0\d{2,3}[-\s]?\d{4,8}[-\s]?\d{3,5})\b/g, replace: "[TELEPON]" },
+          { type: "Alamat", re: /(?:Jl(?:an)?\.?\s+|Jalan\s+|Perumahan\s+)([^,\n.]{5,50})/gi, replace: "[ALAMAT]" },
+          { type: "Usia", re: /(\d{1,3})\s+tahun/gi, replace: "[USIA]" },
+          { type: "No. RM", re: /(?:RM|No\.?\s*RM)[:\s]+(\d{4,8})/gi, replace: "[NO_RM]" },
+        ];
+        const found = [];
+        patterns.forEach((p) => {
+          const rx = new RegExp(p.re.source, p.re.flags);
+          let m;
+          while ((m = rx.exec(text)) !== null) {
+            found.push({ text: m[0], type: p.type, start: m.index, end: m.index + m[0].length, replace: p.replace });
+          }
+        });
+        return found.sort((a, b) => a.start - b.start);
+      }
+      async function runDeident() {
+        const text = document.getElementById("deidentInput").value.trim();
+        if (!text) return;
+        document.getElementById("deidentSp").style.display = "inline";
+        const pii = detectPII(text);
+        const mode = document.getElementById("maskMode").value;
+        document.getElementById("deidentOrig").textContent = text;
+        let html = "",
+          pos = 0;
+        pii.forEach((p) => {
+          if (p.start >= pos) {
+            html += eh(text.slice(pos, p.start));
+            if (mode === "redact") html += `<span style="background:var(--danger);color:var(--danger);border-radius:2px;padding:0 4px;cursor:pointer" title="${p.type}">[${p.type}]</span>`;
+            else if (mode === "replace") html += `<span style="background:rgba(255,169,64,.2);color:var(--warn);border-radius:2px;padding:0 4px;border-bottom:1px dashed var(--warn)">${p.replace}</span>`;
+            else html += `<mark style="background:rgba(255,169,64,.25);padding:0 3px;border-radius:2px" title="${p.type}">${eh(p.text)}</mark>`;
+            pos = p.end;
+          }
+        });
+        html += eh(text.slice(pos));
+        document.getElementById("deidentMasked").innerHTML = html;
+        const tbody = document.getElementById("piiTbody");
+        tbody.innerHTML = pii.length
+          ? pii
+              .map(
+                (p) =>
+                  `<tr><td>${eh(p.text)}</td><td><span class="tag tw">${p.type}</span></td><td style="color:var(--text3)">[${p.start},${p.end}]</td><td style="color:var(--text3)">${p.replace}</td><td><span class="tag tg">Termasked</span></td></tr>`,
+              )
+              .join("")
+          : '<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:14px">Tidak ada PII terdeteksi</td></tr>';
+        const total = pii.length,
+          masked = pii.length;
+        document.getElementById("deidentMetrics").innerHTML =
+          `<div class="mcard"><div class="mval">${total}</div><div class="mlbl">PII terdeteksi</div></div><div class="mcard"><div class="mval">${masked}</div><div class="mlbl">Berhasil di-mask</div></div><div class="mcard"><div class="mval">${total > 0 ? Math.round((masked / total) * 100) : 0}%</div><div class="mlbl">Coverage masking</div></div><div class="mcard"><div class="mval">${[...new Set(pii.map((p) => p.type))].length}</div><div class="mlbl">Tipe PII unik</div></div>`;
+        document.getElementById("deidentResult").style.display = "block";
+        document.getElementById("deidentSp").style.display = "none";
+        markDone("deident");
+      }
+
+      // ========== TERMINOLOGY ==========
+      async function runTerminology() {
+        const raw = document.getElementById("termInput").value.trim();
+        if (!raw) return;
+        const terms = raw
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const tmpl = document.getElementById("termTemplate").value || "Pasien dengan {term}.";
+        const sp = document.getElementById("termSp"),
+          prog = document.getElementById("termProgress");
+        sp.style.display = "inline";
+        document.getElementById("termResult").style.display = "none";
+        const results = [];
+        for (let i = 0; i < terms.length; i++) {
+          prog.textContent = `${i + 1}/${terms.length} — ${terms[i]}`;
+          const text = tmpl.replace("{term}", terms[i]);
+          try {
+            const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+            let entities = [];
+            if (r.data && r.data.result) {
+              const docs = Object.values(r.data.result);
+              if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
+            }
+            const hit = entities.find((e) => (e.detected_name || e.pretty_name || "").toLowerCase().includes(terms[i].toLowerCase().split(" ")[0]));
+            results.push({ term: terms[i], entities, hit, ms: r.ms });
+          } catch (e) {
+            results.push({ term: terms[i], entities: [], hit: null, ms: 0, err: e.message });
+          }
+        }
+        sp.style.display = "none";
+        prog.textContent = "";
+        const covered = results.filter((r) => r.hit).length;
+        const uncov = results.filter((r) => !r.hit && !r.err).length;
+        const errs = results.filter((r) => r.err).length;
+        document.getElementById("termMetrics").innerHTML =
+          `<div class="mcard"><div class="mval">${results.length}</div><div class="mlbl">Total istilah</div></div><div class="mcard"><div class="mval" style="color:var(--accent)">${covered}</div><div class="mlbl">Terdeteksi (coverage)</div></div><div class="mcard"><div class="mval" style="color:var(--warn)">${uncov}</div><div class="mlbl">Tidak terdeteksi</div></div><div class="mcard"><div class="mval" style="color:var(--danger)">${errs}</div><div class="mlbl">Error API</div></div>`;
+        const tbody = document.getElementById("termTbody");
+        tbody.innerHTML = results
+          .map((r) => {
+            const status = r.err ? `<span class="tag tr">Error API</span>` : r.hit ? `<span class="tag tg">Terdeteksi</span>` : r.entities.length > 0 ? `<span class="tag tw">Partial</span>` : `<span class="tag tr">Tidak terdeteksi</span>`;
+            const best = r.hit || r.entities[0];
+            return `<tr><td>${eh(r.term)}</td><td>${best ? eh(best.pretty_name || best.detected_name || "—") : "—"}</td><td>${best && best.acc != null ? (best.acc * 100).toFixed(0) + "%" : "—"}</td><td>${status}</td><td><input type="text" placeholder="catatan..." style="font-size:11px;padding:3px 7px;background:transparent;border-color:var(--border)"></td></tr>`;
+          })
+          .join("");
+        const gaps = results.filter((r) => !r.hit);
+        document.getElementById("termGapAnalysis").innerHTML =
+          gaps.length === 0
+            ? '<span style="color:var(--accent)">✓ Semua istilah berhasil terdeteksi oleh MedCAT.</span>'
+            : `<span style="color:var(--warn)">⚠ ${gaps.length} istilah tidak terdeteksi: <strong>${gaps.map((r) => r.term).join(", ")}</strong></span><br><br>Rekomendasi: istilah yang tidak terdeteksi memerlukan mapping ke terminology standar (UMLS/SNOMED CT) atau adaptasi model melalui MedCAT Trainer sebelum pilot dijalankan.`;
+        document.getElementById("termResult").style.display = "block";
+        markDone("terminology");
+      }
+
+      // ========== NOTE TYPE ==========
+      function loadNoteTypeSample() {
+        document.getElementById("ntProgress").value = "S: Pasien DM tipe 2 dan hipertensi, mengeluh pusing. O: TD 150/95, GDS 215. A: HT tidak terkontrol, DM belum stabil. P: Amlodipine 10 mg, metformin lanjut, kontrol 1 minggu.";
+        document.getElementById("ntDischarge").value =
+          "Pasien Tn. X, 52 tahun, dirawat 3 hari dengan diagnosis diabetes melitus tipe 2 tidak terkontrol dan hipertensi. Terapi: metformin 500 mg 2x1, amlodipine 5 mg 1x1. Kondisi membaik, diperbolehkan pulang.";
+        document.getElementById("ntReferral").value =
+          "Dengan hormat, kami merujuk pasien dengan diabetes melitus tipe 2 dan hipertensi yang belum terkontrol meski sudah mendapat metformin dan amlodipine. Mohon evaluasi dan penanganan lebih lanjut di poliklinik penyakit dalam.";
+      }
+      async function runNoteType() {
+        const texts = { progress: document.getElementById("ntProgress").value.trim(), discharge: document.getElementById("ntDischarge").value.trim(), referral: document.getElementById("ntReferral").value.trim() };
+        if (!texts.progress || !texts.discharge || !texts.referral) return;
+        document.getElementById("ntSp").style.display = "inline";
+        const results = {};
+        for (const [type, text] of Object.entries(texts)) {
+          try {
+            const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+            let entities = [];
+            if (r.data && r.data.result) {
+              const docs = Object.values(r.data.result);
+              if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
+            }
+            results[type] = { entities, ms: r.ms, text };
+          } catch (e) {
+            results[type] = { entities: [], ms: 0, text, err: e.message };
+          }
+        }
+        const names = { progress: "Progress Note", discharge: "Discharge Summary", referral: "Referral Note" };
+        const counts = Object.values(results).map((r) => r.entities.length);
+        const avg = Math.round(counts.reduce((a, b) => a + b, 0) / 3);
+        document.getElementById("ntMetrics").innerHTML =
+          `<div class="mcard"><div class="mval">${results.progress.entities.length}</div><div class="mlbl">Entity Progress Note</div></div><div class="mcard"><div class="mval">${results.discharge.entities.length}</div><div class="mlbl">Entity Discharge</div></div><div class="mcard"><div class="mval">${results.referral.entities.length}</div><div class="mlbl">Entity Referral</div></div><div class="mcard"><div class="mval">${avg}</div><div class="mlbl">Rata-rata entity</div></div>`;
+        document.getElementById("ntCards").innerHTML = Object.entries(results)
+          .map(
+            ([type, r]) =>
+              `<div class="card" style="margin:0"><div class="ctitle">${names[type]} — ${r.entities.length} entity</div><div style="font-size:11px;color:var(--text3);margin-bottom:8px">${r.ms}ms</div>${r.entities
+                .slice(0, 8)
+                .map(
+                  (e) =>
+                    `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${eh(e.pretty_name || e.detected_name || "?")}</span><span style="color:var(--text3);font-family:var(--mono)">${e.acc != null ? (e.acc * 100).toFixed(0) + "%" : "?"}</span></div>`,
+                )
+                .join("")}${r.entities.length > 8 ? `<div style="font-size:11px;color:var(--text3);margin-top:6px">+${r.entities.length - 8} lainnya</div>` : ""}</div>`,
+          )
+          .join("");
+        const diffs = Math.max(...counts) - Math.min(...counts);
+        const stable = diffs <= 2;
+        document.getElementById("ntConclusion").innerHTML = stable
+          ? '<span style="color:var(--accent)">✓ Hasil relatif stabil antar ketiga jenis note (selisih ≤2 entity).</span>'
+          : `<span style="color:var(--warn)">⚠ Terdapat variasi hasil antar jenis note (selisih ${diffs} entity). Note type yang paling lemah perlu dicatat sebagai batas penggunaan.</span>`;
+        document.getElementById("ntResult").style.display = "block";
+        document.getElementById("ntSp").style.display = "none";
+        markDone("notetype");
+      }
+
+      // ========== SAFETY ==========
+      let safetyRowCount = 1;
+      function addSafetyRow() {
+        safetyRowCount++;
+        const div = document.createElement("div");
+        div.className = "srow";
+        div.id = "sr-" + (safetyRowCount - 1);
+        div.innerHTML = `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span style="font-family:var(--mono);font-size:11px;color:var(--text3)">Kasus #${safetyRowCount}</span></div><textarea class="sr-text" placeholder="Kalimat uji sintetis..." style="min-height:60px"></textarea><label class="gap">Konsep sensitif yang diharapkan</label><input type="text" class="sr-expected" placeholder="konsep1, konsep2">`;
+        document.getElementById("safetyRows").appendChild(div);
+      }
+      function loadSafetySample(type) {
+        const [text, expected] = SAFETY_SAMPLES[type];
+        document.querySelector("#sr-0 .sr-text").value = text;
+        document.querySelector("#sr-0 .sr-expected").value = expected;
+      }
+      async function runSafety() {
+        const rows = document.querySelectorAll(".srow");
+        document.getElementById("safetySp").style.display = "inline";
+        const results = [];
+        for (const row of rows) {
+          const text = row.querySelector(".sr-text").value.trim();
+          const expected = row
+            .querySelector(".sr-expected")
+            .value.split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean);
+          if (!text) continue;
+          try {
+            const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+            let entities = [];
+            if (r.data && r.data.result) {
+              const docs = Object.values(r.data.result);
+              if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
+            }
+            const found = expected.filter((exp) => entities.some((e) => (e.pretty_name || e.detected_name || "").toLowerCase().includes(exp)));
+            const missed = expected.filter((exp) => !entities.some((e) => (e.pretty_name || e.detected_name || "").toLowerCase().includes(exp)));
+            results.push({ text, expected, found, missed, entities, risky: missed.length > 0 });
+          } catch (e) {
+            results.push({ text, expected, found: [], missed: expected, entities: [], risky: true, err: e.message });
+          }
+        }
+        document.getElementById("safetySp").style.display = "none";
+        const risky = results.filter((r) => r.risky).length;
+        document.getElementById("safetyMetrics").innerHTML =
+          `<div class="mcard"><div class="mval">${results.length}</div><div class="mlbl">Kasus diuji</div></div><div class="mcard"><div class="mval" style="color:var(--accent)">${results.length - risky}</div><div class="mlbl">Deteksi benar</div></div><div class="mcard"><div class="mval" style="color:var(--danger)">${risky}</div><div class="mlbl">Riskan / miss</div></div><div class="mcard"><div class="mval">${results.reduce((a, r) => a + r.entities.length, 0)}</div><div class="mlbl">Total entity</div></div>`;
+        document.getElementById("safetyCards").innerHTML = results
+          .map(
+            (r, i) =>
+              `<div class="card ${r.risky ? "" : ""}"><div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="tag ${r.risky ? "tr" : "tg"}">${r.risky ? "⚠ Riskan" : "✓ OK"}</span><span style="font-size:12px;color:var(--text2)">Kasus #${i + 1}</span></div><div style="font-size:13px;margin-bottom:8px;padding:8px;background:var(--surface2);border-radius:4px;font-style:italic">${eh(r.text)}</div><div style="font-size:12px;margin-bottom:4px">Diharapkan: ${r.expected.map((e) => `<span class="efound">${eh(e)}</span>`).join(" ")}</div><div style="font-size:12px;margin-bottom:4px">Terdeteksi: ${r.found.length ? r.found.map((e) => `<span class="efound">${eh(e)}</span>`).join(" ") : '<span style="color:var(--text3)">—</span>'}</div>${r.missed.length ? `<div style="font-size:12px">Miss: ${r.missed.map((e) => `<span class="emiss">${eh(e)}</span>`).join(" ")}</div>` : ""}</div>`,
+          )
+          .join("");
+        document.getElementById("safetyResult").style.display = "block";
+        markDone("safety");
+      }
+
+      // ========== EFFICIENCY ==========
+      let timerInterval = null,
+        timerSec = 0,
+        timerRunning = false,
+        manualSec = 0;
+      function toggleTimer() {
+        if (timerRunning) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          document.getElementById("timerBtn").textContent = "▶ Lanjutkan";
+        } else {
+          timerRunning = true;
+          document.getElementById("timerBtn").textContent = "⏸ Pause";
+          timerInterval = setInterval(() => {
+            timerSec++;
+            const m = String(Math.floor(timerSec / 60)).padStart(2, "0"),
+              s = String(timerSec % 60).padStart(2, "0");
+            document.getElementById("timerDisplay").textContent = m + ":" + s;
+          }, 1000);
+        }
+      }
+      function resetTimer() {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerSec = 0;
+        document.getElementById("timerDisplay").textContent = "00:00";
+        document.getElementById("timerBtn").textContent = "▶ Mulai timer";
+        document.getElementById("manualTimeRecorded").textContent = "";
+      }
+      function stopAndRecord() {
+        if (timerRunning) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+        }
+        manualSec = timerSec;
+        document.getElementById("manualTimeRecorded").textContent = "✓ Waktu manual: " + manualSec + " detik";
+        document.getElementById("timerBtn").textContent = "▶ Mulai timer";
+      }
+      async function runEfficiency() {
+        const text = document.getElementById("effInput").value.trim();
+        if (!text) return;
+        document.getElementById("effSp").style.display = "inline";
+        try {
+          const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+          let entities = [];
+          if (r.data && r.data.result) {
+            const docs = Object.values(r.data.result);
+            if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
+          }
+          document.getElementById("effNlpTime").textContent = "NLP: " + r.ms + "ms";
+          document.getElementById("mManual").textContent = manualSec || "—";
+          document.getElementById("mNlp").textContent = r.ms;
+          document.getElementById("mCount").textContent = entities.length;
+          document.getElementById("mSaved").textContent = manualSec > 0 ? Math.max(0, manualSec - r.ms / 1000).toFixed(1) + "s" : "—";
+          const mt = document
+            .getElementById("effManual")
+            .value.split(/[\n,;]+/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+          document.getElementById("manualTokens").innerHTML = mt.map((t) => `<span class="emanual">${eh(t)}</span> `).join("");
+          document.getElementById("nlpTokens").innerHTML = entities.map((e) => `<span class="efound">${eh(e.pretty_name || e.detected_name || "")}</span> `).join("");
+          document.getElementById("effResult").style.display = "block";
+          markDone("efficiency");
+        } catch (e) {
+          document.getElementById("effNlpTime").textContent = "Error: " + e.message;
+        }
+        document.getElementById("effSp").style.display = "none";
+      }
+
+      // ========== LATENCY ==========
+      const LAT_TEXTS = {
+        short: [
+          "Pasien demam.",
+          "Diberi paracetamol.",
+          "Pasien batuk kering.",
+          "Riwayat alergi penisilin.",
+          "Tekanan darah tinggi.",
+          SAMPLES.s2.slice(0, 40),
+          SAMPLES.s3.slice(0, 40),
+          SAMPLES.s4.slice(0, 40),
+          SAMPLES.s5.slice(0, 40),
+          SAMPLES.s1.slice(0, 40),
+        ],
+        medium: [SAMPLES.s1, SAMPLES.s2, SAMPLES.s3, SAMPLES.s4, SAMPLES.s5, SAMPLES.s6, SAMPLES.s7, SAMPLES.s8, SAMPLES.s1, SAMPLES.s2],
+        long: [SAMPLES.s1 + " " + SAMPLES.s2, SAMPLES.s3 + " " + SAMPLES.s4, SAMPLES.s5 + " " + SAMPLES.s6, SAMPLES.s7 + " " + SAMPLES.s8, SAMPLES.s1 + " " + SAMPLES.s3],
+      };
+      async function runLatency() {
+        const count = parseInt(document.getElementById("latCount").value);
+        const mode = document.getElementById("latMode").value;
+        const length = document.getElementById("latLength").value;
+        const texts = LAT_TEXTS[length].slice(0, count);
+        const btn = document.getElementById("btnLat");
+        btn.disabled = true;
+        btn.textContent = "Berjalan...";
+        document.getElementById("latSp").style.display = "inline";
+        document.getElementById("latResult").style.display = "none";
+        const sTimes = [],
+          log = [];
+        if (mode === "single" || mode === "both") {
+          log.push("=== SINGLE REQUEST ===");
+          for (let i = 0; i < texts.length; i++) {
+            const r = await apiCall("/api/process", "POST", { content: [{ text: texts[i] }] });
+            sTimes.push(r.ms);
+            log.push("Request " + (i + 1) + ": " + r.ms + "ms (HTTP " + r.status + ")");
+          }
+        }
+        let bulkMs = null;
+        if (mode === "bulk" || mode === "both") {
+          log.push("\n=== BULK REQUEST ===");
+          const r = await apiCall("/api/process_bulk", "POST", { content: texts.map((t) => ({ text: t })) });
+          bulkMs = r.ms;
+          log.push("Bulk (" + texts.length + " docs): " + r.ms + "ms (HTTP " + r.status + ")");
+        }
+        const times = sTimes.length > 0 ? sTimes : [bulkMs];
+        const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+        document.getElementById("latMetrics").innerHTML =
+          `<div class="mcard"><div class="mval">${avg}</div><div class="mlbl">Rata-rata (ms)</div></div><div class="mcard"><div class="mval">${Math.min(...times)}</div><div class="mlbl">Min (ms)</div></div><div class="mcard"><div class="mval">${Math.max(...times)}</div><div class="mlbl">Max (ms)</div></div><div class="mcard"><div class="mval">${count}</div><div class="mlbl">Request</div></div>`;
+        if (sTimes.length > 0) {
+          const mx = Math.max(...sTimes, 1);
+          document.getElementById("latBars").innerHTML = sTimes
+            .map((t, i) => `<div class="lbw"><span class="lval">${t}</span><div class="lb" style="height:${Math.round((t / mx) * 84) + 4}px"></div><span class="llab">R${i + 1}</span></div>`)
+            .join("");
+        }
+        if (mode === "both" && bulkMs !== null) {
+          document.getElementById("bulkCard").style.display = "block";
+          const st = sTimes.reduce((a, b) => a + b, 0);
+          document.getElementById("singleTotal").textContent = st + "ms";
+          document.getElementById("singleAvg").textContent = Math.round(st / count) + "ms/doc";
+          document.getElementById("bulkTotal").textContent = bulkMs + "ms";
+          document.getElementById("bulkAvg").textContent = Math.round(bulkMs / count) + "ms/doc";
+        } else document.getElementById("bulkCard").style.display = "none";
+        document.getElementById("latLog").textContent = log.join("\n");
+        document.getElementById("latResult").style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "Jalankan benchmark";
+        document.getElementById("latSp").style.display = "none";
+        markDone("latency");
+      }
+
+      // ========== NEGATIVE ==========
+      function loadNeg(el, k) {
+        document.querySelectorAll(".nchip").forEach((c) => c.classList.remove("act"));
+        el.classList.add("act");
+        document.getElementById("negPayload").value = NEG_PAYLOADS[k] || "{}";
+      }
+      async function runNegative() {
+        const payloadStr = document.getElementById("negPayload").value;
+        const ep = document.getElementById("negEndpoint").value;
+        document.getElementById("negSp").style.display = "inline";
+        document.getElementById("negResult").style.display = "none";
+        try {
+          const r = await apiCall(ep, "POST", payloadStr);
+          const badge = document.getElementById("negBadge");
+          badge.textContent = r.status;
+          badge.className = r.status >= 200 && r.status < 300 ? "hbadge h2" : r.status >= 400 && r.status < 500 ? "hbadge h4" : "hbadge h5";
+          document.getElementById("negInfo").textContent = ep + " — " + r.ms + "ms";
+          const raw = document.getElementById("negRaw");
+          raw.textContent = typeof r.data === "object" ? JSON.stringify(r.data, null, 2) : String(r.data);
+          raw.className = r.status >= 400 ? "rbox err" : "rbox ok";
+          document.getElementById("negResult").style.display = "block";
+          markDone("negative");
+        } catch (e) {
+          document.getElementById("negBadge").textContent = "ERR";
+          document.getElementById("negBadge").className = "hbadge h5";
+          document.getElementById("negRaw").textContent = "Network error: " + e.message;
+          document.getElementById("negRaw").className = "rbox err";
+          document.getElementById("negResult").style.display = "block";
+        }
+        document.getElementById("negSp").style.display = "none";
+      }
+      function rateError(v) {
+        ["rateJ", "rateB", "rateN"].forEach((id) => {
+          document.getElementById(id).style.borderColor = "";
+          document.getElementById(id).style.color = "";
+        });
+        const m = { jelas: "rateJ", bingung: "rateB", nihil: "rateN" };
+        const el = document.getElementById(m[v]);
+        el.style.borderColor = "var(--accent)";
+        el.style.color = "var(--accent)";
+      }
+
+      // ========== SERVICE INFO ==========
+      async function fetchInfo() {
+        document.getElementById("infoSp").style.display = "inline";
+        document.getElementById("infoResult").style.display = "none";
+        try {
+          const r = await apiCall("/api/info");
+          const data = r.data;
+          document.getElementById("infoRaw").textContent = JSON.stringify(data, null, 2);
+          const fields = [];
+          if (data) {
+            if (data.model_card) fields.push(["Model", data.model_card.name || JSON.stringify(data.model_card).slice(0, 30)]);
+            if (data.model_pack_name) fields.push(["Model pack", data.model_pack_name]);
+            if (data.version) fields.push(["Versi", data.version]);
+            if (data.service_name) fields.push(["Service", data.service_name]);
+          }
+          if (!fields.length) fields.push(["Status", "OK"], ["HTTP", r.status], ["Latency", r.ms + "ms"], ["Endpoint", "/api/info"]);
+          document.getElementById("infoMetrics").innerHTML = fields.map(([l, v]) => `<div class="mcard"><div class="mval" style="font-size:15px">${eh(String(v))}</div><div class="mlbl">${l}</div></div>`).join("");
+          const hasVer = !!(data && (data.version || data.model_pack_name || data.model_card));
+          document.getElementById("traceCheck").innerHTML =
+            `<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:8px;align-items:center"><span style="color:${hasVer ? "var(--accent)" : "var(--danger)"}">${hasVer ? "✓" : "✗"}</span><span style="font-size:13px">Identitas versi/model dapat ditelusuri</span></div><div style="display:flex;gap:8px;align-items:center"><span style="color:${r.status === 200 ? "var(--accent)" : "var(--danger)"}">${r.status === 200 ? "✓" : "✗"}</span><span style="font-size:13px">Endpoint /api/info merespons HTTP 200</span></div><div style="font-size:12px;color:var(--text2);margin-top:4px">${hasVer ? "Traceability minimum terpenuhi." : "Perhatian: informasi versi/model tidak ditemukan. Catat sebagai gap traceability (UT-04)."}</div></div>`;
+          document.getElementById("infoResult").style.display = "block";
+          markDone("serviceinfo");
+        } catch (e) {
+          document.getElementById("infoRaw").textContent = "Error: " + e.message;
+          document.getElementById("infoRaw").className = "rbox err";
+          document.getElementById("infoResult").style.display = "block";
+        }
+        document.getElementById("infoSp").style.display = "none";
+      }
+
+      // ========== EXPLAINABILITY ==========
+      async function runExplain() {
+        const text = document.getElementById("explainInput").value.trim();
+        if (!text) return;
+        document.getElementById("explainSp").style.display = "inline";
+        try {
+          const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+          let entities = [];
+          if (r.data && r.data.result) {
+            const docs = Object.values(r.data.result);
+            if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
+          }
+          const fieldDefs = {
+            detected_name: "Teks yang terdeteksi di catatan",
+            pretty_name: "Nama konsep standar (readable)",
+            cui: "Concept Unique Identifier — kode unik di ontologi",
+            start: "Posisi awal karakter di teks",
+            end: "Posisi akhir karakter di teks",
+            acc: "Confidence score (0-1) — seberapa yakin model",
+            meta_anns: "Metadata tambahan (status, negasi, dll)",
+          };
+          let html = "";
+          if (entities.length > 0) {
+            const e = entities[0];
+            html += `<div style="font-size:12px;color:var(--text2);margin-bottom:12px">Contoh entity: <strong>${eh(e.pretty_name || e.detected_name || "")}</strong></div>`;
+            Object.entries(fieldDefs).forEach(([field, desc]) => {
+              const val = e[field];
+              const hasVal = val !== undefined && val !== null;
+              html += `<div style="display:grid;grid-template-columns:140px 1fr 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:center"><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">${field}</span><span style="font-size:12px;color:var(--text2)">${desc}</span><div style="display:flex;gap:8px;align-items:center"><span style="font-family:var(--mono);font-size:11px">${hasVal ? eh(typeof val === "object" ? JSON.stringify(val).slice(0, 40) : String(val)) : '<span style="color:var(--text3)">tidak ada</span>'}</span><select style="font-size:11px;padding:2px 6px;width:auto"><option>Dapat dijelaskan</option><option>Perlu klarifikasi</option><option>Membingungkan</option></select></div></div>`;
+            });
+          } else {
+            html = '<span style="color:var(--text3)">Tidak ada entity terdeteksi. Coba teks yang lebih klinis.</span>';
+          }
+          document.getElementById("explainFields").innerHTML = html;
+          const explained = Object.keys(fieldDefs).filter((f) => entities[0] && entities[0][f] !== undefined).length;
+          document.getElementById("explainMetrics").innerHTML =
+            `<div class="mcard"><div class="mval">${entities.length}</div><div class="mlbl">Entity total</div></div><div class="mcard"><div class="mval">${explained}</div><div class="mlbl">Field tersedia</div></div><div class="mcard"><div class="mval">${Object.keys(fieldDefs).length}</div><div class="mlbl">Field standar</div></div><div class="mcard"><div class="mval">${Math.round((explained / Object.keys(fieldDefs).length) * 100)}%</div><div class="mlbl">Field coverage</div></div>`;
+          document.getElementById("explainResult").style.display = "block";
+          markDone("explainability");
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+        document.getElementById("explainSp").style.display = "none";
+      }
+
+      // ========== CHECKLIST HELPER ==========
+      const ckState = {};
+      function setCK(btn, val) {
+        const key = btn.dataset.key;
+        const parent = btn.closest(".ckstatus");
+        parent.querySelectorAll(".ckbtn").forEach((b) => {
+          b.className = "ckbtn";
+        });
+        btn.className = "ckbtn sel-" + (val === "ada" ? "ada" : val === "tidak" ? "tidak" : "partial");
+        ckState[key] = val;
+        if (val === "ada") btn.closest(".ckitem").classList.add("done-item");
+        else btn.closest(".ckitem").classList.remove("done-item");
+      }
+
+      // ========== DOCKER CHECKLIST ==========
+      document.getElementById("dockerChecklist").innerHTML = DOCKER_CHECKLIST_ITEMS.map(
+        (item) =>
+          `<div class="ckitem" id="dck-${item.key}"><div class="ckmain"><div class="cklbl">${item.label}</div><div class="ckdesc">${item.desc}</div><div class="ckstatus"><button class="ckbtn" onclick="setCK(this,'ada')" data-key="${item.key}">Ada / Lolos</button><button class="ckbtn" onclick="setCK(this,'tidak')" data-key="${item.key}">Belum</button><button class="ckbtn" onclick="setCK(this,'partial')" data-key="${item.key}">Partial</button></div></div></div>`,
+      ).join("");
+
+      // ========== GO NO-GO ==========
+      document.getElementById("gonogoChecklist").innerHTML = GONOGO_ITEMS.map(
+        (item) =>
+          `<div class="ckitem"><div class="ckmain"><div class="cklbl">${item.label} ${item.critical ? '<span class="tag tr" style="font-size:9px">WAJIB</span>' : ""}</div><div class="ckdesc">${item.desc}</div><div class="ckstatus"><button class="ckbtn" onclick="setCK(this,'ada')" data-key="${item.key}">Go ✓</button><button class="ckbtn" onclick="setCK(this,'partial')" data-key="${item.key}">Conditional ⚠</button><button class="ckbtn" onclick="setCK(this,'tidak')" data-key="${item.key}">No-Go ✗</button></div></div></div>`,
+      ).join("");
+      function calcGonogo() {
+        const critical = GONOGO_ITEMS.filter((i) => i.critical);
+        const allCritOk = critical.every((i) => ckState[i.key] === "ada");
+        const anyNoGo = GONOGO_ITEMS.some((i) => ckState[i.key] === "tidak");
+        const anyConditional = GONOGO_ITEMS.some((i) => ckState[i.key] === "partial");
+        const verdict = document.getElementById("gonogoVerdict");
+        verdict.style.display = "block";
+        if (!allCritOk || anyNoGo) {
+          verdict.style.background = "rgba(255,71,87,.1)";
+          verdict.style.borderLeft = "4px solid var(--danger)";
+          verdict.innerHTML = '<strong style="color:var(--danger)">✗ NO-GO</strong> — Satu atau lebih syarat wajib belum terpenuhi. Pilot belum dapat dijalankan.';
+        } else if (anyConditional) {
+          verdict.style.background = "rgba(255,169,64,.1)";
+          verdict.style.borderLeft = "4px solid var(--warn)";
+          verdict.innerHTML = '<strong style="color:var(--warn)">⚠ CONDITIONAL GO</strong> — Semua syarat wajib terpenuhi, namun ada item conditional yang perlu diselesaikan sebelum pilot berjalan penuh.';
+        } else {
+          verdict.style.background = "rgba(0,212,168,.1)";
+          verdict.style.borderLeft = "4px solid var(--accent)";
+          verdict.innerHTML = '<strong style="color:var(--accent)">✓ GO</strong> — Semua syarat terpenuhi. Pilot dapat dijalankan.';
+        }
+        markDone("gonogo");
+      }
+
+      // ========== MISC HELPERS ==========
+      function setWF(v) {
+        ["wfYes", "wfNo"].forEach((id) => {
+          document.getElementById(id).style.borderColor = "";
+          document.getElementById(id).style.color = "";
+        });
+        const m = { ya: "wfYes", tidak: "wfNo" };
+        document.getElementById(m[v]).style.borderColor = "var(--accent)";
+        document.getElementById(m[v]).style.color = "var(--accent)";
+        document.getElementById("wfStatus").textContent = v === "ya" ? "✓ Alur dapat dijelaskan — kondisi lulus WI-01" : "✗ Alur belum dapat dijelaskan — catat sebagai gap WI-01";
+        markDone("workflow");
+      }
+      function setRB(v) {
+        ["rbYes", "rbNo", "rbPartial"].forEach((id) => {
+          document.getElementById(id).style.borderColor = "";
+          document.getElementById(id).style.color = "";
+        });
+        const m = { ya: "rbYes", tidak: "rbNo", partial: "rbPartial" };
+        document.getElementById(m[v]).style.borderColor = "var(--accent)";
+        document.getElementById(m[v]).style.color = "var(--accent)";
+        document.getElementById("rbStatus").textContent = v === "ya" ? "✓ Runbook reproducible — kondisi lulus ESC-08" : v === "partial" ? "⚠ Perlu penyempurnaan" : "✗ Runbook belum dapat diikuti tanpa bantuan lisan";
+        markDone("docker");
+      }
+      function setRBR(v) {
+        ["rbr1", "rbr2", "rbr3"].forEach((id) => {
+          document.getElementById(id).style.borderColor = "";
+          document.getElementById(id).style.color = "";
+        });
+        const m = { ya: "rbr1", partial: "rbr2", tidak: "rbr3" };
+        document.getElementById(m[v]).style.borderColor = "var(--accent)";
+        document.getElementById(m[v]).style.color = "var(--accent)";
+        document.getElementById("rbrStatus").textContent = v === "ya" ? "✓ Runbook dapat diikuti — kondisi lulus ESC-08" : v === "partial" ? "⚠ Perlu sedikit klarifikasi" : "✗ Runbook masih membutuhkan bantuan lisan";
+        markDone("runbook");
+      }
+      function setRepro(v) {
+        ["reprYes", "reprNo"].forEach((id) => {
+          document.getElementById(id).style.borderColor = "";
+          document.getElementById(id).style.color = "";
+        });
+        document.getElementById("repr" + v.charAt(0).toUpperCase() + v.slice(1)).style.borderColor = "var(--accent)";
+        document.getElementById("repr" + v.charAt(0).toUpperCase() + v.slice(1)).style.color = "var(--accent)";
+        document.getElementById("reproStatus").textContent = v === "ya" ? "✓ Reproducibility terpenuhi — kondisi lulus HI-07" : "✗ Belum reproducible — lengkapi versi dan konfigurasi";
+        markDone("usecase");
+      }
+      function setCostVerdict(v) {
+        ["costYes", "costPart", "costNo"].forEach((id) => {
+          document.getElementById(id).style.borderColor = "";
+          document.getElementById(id).style.color = "";
+        });
+        const m = { ya: "costYes", conditional: "costPart", tidak: "costNo" };
+        document.getElementById(m[v]).style.borderColor = "var(--accent)";
+        document.getElementById(m[v]).style.color = "var(--accent)";
+        document.getElementById("costStatus").textContent = v === "ya" ? "✓ Pilot layak secara biaya" : v === "conditional" ? "⚠ Layak dengan catatan" : "✗ Belum layak — review komponen biaya";
+        markDone("costbenefit");
+      }
+
+      // Harm table
+      function addHarmRow() {
+        const tbody = document.getElementById("harmTbody");
+        const n = tbody.rows.length + 1;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td style="color:var(--text3);font-family:var(--mono)">${n}</td><td><input type="text" placeholder="Skenario harm..." style="font-size:12px;padding:4px 8px"></td><td><select style="font-size:12px;padding:4px 6px"><option>False Positive</option><option>False Negative</option><option>Automation Bias</option><option>Privacy Leak</option></select></td><td><select style="font-size:12px;padding:4px 6px"><option>1</option><option>2</option><option>3</option><option>4</option><option value="5">5 — kritis</option></select></td><td><input type="text" placeholder="Pemicu..." style="font-size:12px;padding:4px 8px"></td><td><input type="text" placeholder="Kontrol pencegahan..." style="font-size:12px;padding:4px 8px"></td>`;
+        tbody.appendChild(tr);
+      }
+      // Init harm rows
+      (() => {
+        const samples = [
+          ["Alergi tidak tertangkap", "False Negative", "5", "Konsep alergi dalam kalimat kompleks/negasi", "Wajib review manual semua entity alergi"],
+          ["Obat salah terlabel", "False Positive", "4", "Nama obat mirip dengan istilah lain", "Human checkpoint sebelum data masuk sistem"],
+          ["Reviewer terlalu percaya", "Automation Bias", "4", "Confidence tinggi tanpa cek manual", "Training reviewer + disclosure di UI"],
+          ["Data sensitif lolos masking", "Privacy Leak", "5", "Variasi penulisan nama yang tidak terdeteksi", "Uji masking dengan variasi nama sebelum go-live"],
+          ["Output dipakai di luar konteks", "Automation Bias", "3", "Tidak ada batas penggunaan yang eksplisit", "Tambahkan disclosure di setiap output"],
+        ];
+        const tbody = document.getElementById("harmTbody");
+        samples.forEach(([skenario, tipe, dampak, pemicu, kontrol], i) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td style="color:var(--text3);font-family:var(--mono)">${i + 1}</td><td><input type="text" value="${skenario}" style="font-size:12px;padding:4px 8px"></td><td><select style="font-size:12px;padding:4px 6px"><option${tipe === "False Positive" ? " selected" : ""}>False Positive</option><option${tipe === "False Negative" ? " selected" : ""}>False Negative</option><option${tipe === "Automation Bias" ? " selected" : ""}>Automation Bias</option><option${tipe === "Privacy Leak" ? " selected" : ""}>Privacy Leak</option></select></td><td><select style="font-size:12px;padding:4px 6px"><option>1</option><option>2</option><option>3</option><option${dampak === "4" ? " selected" : ""}>4</option><option${dampak === "5" ? " selected" : ""}>5 — kritis</option></select></td><td><input type="text" value="${pemicu}" style="font-size:12px;padding:4px 8px"></td><td><input type="text" value="${kontrol}" style="font-size:12px;padding:4px 8px"></td>`;
+          tbody.appendChild(tr);
+        });
+      })();
+
+      function addKpiRow() {
+        const c = document.getElementById("kpiRows");
+        const d = document.createElement("div");
+        d.className = "harm-row";
+        d.style.cssText = "margin-bottom:8px;grid-template-columns:2fr 1fr 1fr";
+        d.innerHTML =
+          '<input type="text" placeholder="Nama KPI" style="font-size:12px;padding:5px 8px"><input type="text" placeholder="Satuan" style="font-size:12px;padding:5px 8px"><input type="text" placeholder="Cara ukur" style="font-size:12px;padding:5px 8px">';
+        c.appendChild(d);
+      }
+      function addLicRow() {
+        const t = document.getElementById("licTbody");
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td><input type="text" placeholder="Nama dependency" style="font-size:12px;padding:4px 8px"></td><td><select style="font-size:12px;padding:4px 6px"><option>Terminology</option><option>Model pack</option><option>Library</option><option>API eksternal</option></select></td><td><select style="font-size:12px;padding:4px 6px" onchange="colorLicRow(this)"><option value="bebas">Bebas / open</option><option value="berbayar">Berbayar</option><option value="terbatas">Perlu approval</option><option value="unknown">Belum diketahui</option></select></td><td style="text-align:center"><input type="checkbox"></td>';
+        t.appendChild(tr);
+      }
+      function colorLicRow(sel) {
+        const tr = sel.closest("tr");
+        tr.style.background = sel.value === "terbatas" ? "rgba(255,71,87,.05)" : sel.value === "berbayar" ? "rgba(255,169,64,.05)" : sel.value === "unknown" ? "rgba(255,169,64,.03)" : "";
+      }
+      function addRACIRow() {
+        const t = document.querySelector("#panel-raci table tbody");
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td><input type="text" placeholder="Nama role" style="font-size:12px;padding:4px 8px"></td><td><input type="text" placeholder="Nama / jabatan" style="font-size:12px;padding:4px 8px"></td><td><input type="text" placeholder="Tanggung jawab utama" style="font-size:12px;padding:4px 8px"></td><td style="text-align:center"><input type="checkbox"></td>';
+        t.appendChild(tr);
+      }
+      function addCostRow() {
+        const t = document.querySelector("#panel-costbenefit table tbody");
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td><input type="text" placeholder="Komponen biaya" style="font-size:12px;padding:4px 8px"></td><td><input type="text" placeholder="Satuan" style="font-size:12px;padding:4px 8px"></td><td><input type="text" placeholder="Jumlah" style="font-size:12px;padding:4px 8px;width:60px"></td><td><input type="text" placeholder="Rp..." style="font-size:12px;padding:4px 8px"></td><td><input type="text" placeholder="Catatan" style="font-size:12px;padding:4px 8px"></td>';
+        t.appendChild(tr);
+      }
+
+      async function runRareCoverage() {
+        const raw = document.getElementById("eqRare").value.trim();
+        if (!raw) return;
+        const terms = raw
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        document.getElementById("rareSp").style.display = "inline";
+        document.getElementById("rareResult").style.display = "none";
+        const results = [];
+        for (const term of terms) {
+          try {
+            const r = await apiCall("/api/process", "POST", { content: [{ text: "Pasien didiagnosis dengan " + term + "." }] });
+            let entities = [];
+            if (r.data && r.data.result) {
+              const docs = Object.values(r.data.result);
+              if (docs[0] && docs[0].entities) entities = Object.values(docs[0].entities);
+            }
+            const hit = entities[0];
+            results.push({ term, hit, entities });
+          } catch (e) {
+            results.push({ term, hit: null, entities: [], err: true });
+          }
+        }
+        document.getElementById("rareTbody").innerHTML = results
+          .map(
+            (r) =>
+              `<tr><td>${eh(r.term)}</td><td>${r.hit ? `<span class="tag tg">${eh(r.hit.pretty_name || r.hit.detected_name || "?")}</span>` : '<span style="color:var(--text3)">—</span>'}</td><td style="font-family:var(--mono)">${r.hit && r.hit.acc != null ? (r.hit.acc * 100).toFixed(0) + "%" : "—"}</td><td>${r.err ? '<span class="tag tr">Error</span>' : r.hit ? '<span class="tag tg">Diketahui</span>' : r.entities.length ? '<span class="tag tw">Partial</span>' : '<span class="tag tr">Belum diketahui</span>'}</td></tr>`,
+          )
+          .join("");
+        document.getElementById("rareResult").style.display = "block";
+        document.getElementById("rareSp").style.display = "none";
+        markDone("equity");
+      }
+
+      // Auto-ping
+      setTimeout(pingApi, 600);
+    </script>
+  </body>
+</html>
