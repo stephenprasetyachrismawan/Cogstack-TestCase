@@ -2329,7 +2329,7 @@
         document.getElementById("annotSp").style.display = "inline";
         document.getElementById("annotResult").style.display = "none";
         try {
-          const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+          const r = await apiCall("/api/process", "POST", { content: { text } });
           document.getElementById("annotTime").textContent = r.ms + "ms";
           document.getElementById("annotRaw").textContent = JSON.stringify(r.data, null, 2);
           renderAnnotations(text, r.data);
@@ -2455,7 +2455,7 @@
           prog.textContent = `${i + 1}/${terms.length} — ${terms[i]}`;
           const text = tmpl.replace("{term}", terms[i]);
           try {
-            const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+            const r = await apiCall("/api/process", "POST", { content: { text } });
             let entities = [];
             if (r.data && r.data.result) {
               const docs = Object.values(r.data.result);
@@ -2506,7 +2506,7 @@
         const results = {};
         for (const [type, text] of Object.entries(texts)) {
           try {
-            const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+            const r = await apiCall("/api/process", "POST", { content: { text } });
             let entities = [];
             if (r.data && r.data.result) {
               const docs = Object.values(r.data.result);
@@ -2572,7 +2572,7 @@
             .filter(Boolean);
           if (!text) continue;
           try {
-            const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+            const r = await apiCall("/api/process", "POST", { content: { text } });
             let entities = [];
             if (r.data && r.data.result) {
               const docs = Object.values(r.data.result);
@@ -2642,7 +2642,7 @@
         if (!text) return;
         document.getElementById("effSp").style.display = "inline";
         try {
-          const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+          const r = await apiCall("/api/process", "POST", { content: { text } });
           let entities = [];
           if (r.data && r.data.result) {
             const docs = Object.values(r.data.result);
@@ -2816,7 +2816,7 @@
         if (!text) return;
         document.getElementById("explainSp").style.display = "inline";
         try {
-          const r = await apiCall("/api/process", "POST", { content: [{ text }] });
+          const r = await apiCall("/api/process", "POST", { content: { text } });
           let entities = [];
           if (r.data && r.data.result) {
             const docs = Object.values(r.data.result);
@@ -3031,7 +3031,7 @@
         const results = [];
         for (const term of terms) {
           try {
-            const r = await apiCall("/api/process", "POST", { content: [{ text: "Pasien didiagnosis dengan " + term + "." }] });
+            const r = await apiCall("/api/process", "POST", { content: { text: "Pasien didiagnosis dengan " + term + "." } });
             let entities = [];
             if (r.data && r.data.result) {
               const docs = Object.values(r.data.result);
