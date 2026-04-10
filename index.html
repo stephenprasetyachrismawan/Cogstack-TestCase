@@ -876,6 +876,7 @@
           <label>API:</label>
           <input class="api-input" id="apiBase" value="" placeholder="same-origin proxy atau http://localhost:5556" />
           <button class="ping-btn" onclick="pingApi()">ping</button>
+          <button class="ping-btn" onclick="resetSavedInputs()">reset data</button>
           <div class="sdot" id="sdot"></div>
           <span class="slabel" id="slabel">—</span>
           <span class="progress-pill" id="progressPill">0 / 44 selesai</span>
@@ -3068,6 +3069,121 @@
         document.getElementById("rareSp").style.display = "none";
         markDone("equity");
       }
+
+      // ========== PERSISTENCE (LOCAL STORAGE) ==========
+      const LS_FORM_KEY = "cogstack_tester_form_state_v1";
+      const LS_DYNAMIC_KEY = "cogstack_tester_dynamic_state_v1";
+      const DYNAMIC_CONTAINER_IDS = ["safetyRows", "harmTbody", "kpiRows", "licTbody", "raciTbody", "costTbody"];
+
+      function ensurePersistentContainerIds() {
+        const raciBody = document.querySelector("#panel-raci table tbody");
+        if (raciBody && !raciBody.id) raciBody.id = "raciTbody";
+        const costBody = document.querySelector("#panel-costbenefit table tbody");
+        if (costBody && !costBody.id) costBody.id = "costTbody";
+      }
+
+      function getDomPath(el) {
+        const parts = [];
+        let node = el;
+        while (node && node !== document.body) {
+          const parent = node.parentElement;
+          if (!parent) break;
+          const idx = Array.prototype.indexOf.call(parent.children, node);
+          parts.push(node.tagName + ":" + idx);
+          if (node.id) {
+            parts.push("#" + node.id);
+            break;
+          }
+          node = parent;
+        }
+        return parts.reverse().join(">");
+      }
+
+      function getInputKey(el) {
+        if (el.id) return "id:" + el.id;
+        return "path:" + getDomPath(el);
+      }
+
+      function collectFormState() {
+        const state = {};
+        document.querySelectorAll("input, textarea, select").forEach((el) => {
+          const type = (el.type || "").toLowerCase();
+          if (type === "button" || type === "submit" || type === "reset") return;
+          const key = getInputKey(el);
+          state[key] = type === "checkbox" || type === "radio" ? !!el.checked : el.value;
+        });
+        return state;
+      }
+
+      function collectDynamicState() {
+        const state = {};
+        DYNAMIC_CONTAINER_IDS.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) state[id] = el.innerHTML;
+        });
+        return state;
+      }
+
+      function applyFormState(state) {
+        if (!state || typeof state !== "object") return;
+        document.querySelectorAll("input, textarea, select").forEach((el) => {
+          const type = (el.type || "").toLowerCase();
+          if (type === "button" || type === "submit" || type === "reset") return;
+          const key = getInputKey(el);
+          if (!(key in state)) return;
+          if (type === "checkbox" || type === "radio") el.checked = !!state[key];
+          else el.value = state[key];
+        });
+      }
+
+      function applyDynamicState(state) {
+        if (!state || typeof state !== "object") return;
+        DYNAMIC_CONTAINER_IDS.forEach((id) => {
+          if (!(id in state)) return;
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = state[id];
+        });
+      }
+
+      function saveAllToLocalStorage() {
+        try {
+          localStorage.setItem(LS_FORM_KEY, JSON.stringify(collectFormState()));
+          localStorage.setItem(LS_DYNAMIC_KEY, JSON.stringify(collectDynamicState()));
+        } catch (e) {
+          console.warn("Failed to save local state", e);
+        }
+      }
+
+      function restoreAllFromLocalStorage() {
+        try {
+          ensurePersistentContainerIds();
+          const dynamicRaw = localStorage.getItem(LS_DYNAMIC_KEY);
+          if (dynamicRaw) applyDynamicState(JSON.parse(dynamicRaw));
+          const formRaw = localStorage.getItem(LS_FORM_KEY);
+          if (formRaw) applyFormState(JSON.parse(formRaw));
+        } catch (e) {
+          console.warn("Failed to restore local state", e);
+        }
+      }
+
+      let saveTimer = null;
+      function scheduleSaveAll() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveAllToLocalStorage, 150);
+      }
+
+      function resetSavedInputs() {
+        const ok = confirm("Hapus semua input tersimpan di browser dan kembali ke default?");
+        if (!ok) return;
+        localStorage.removeItem(LS_FORM_KEY);
+        localStorage.removeItem(LS_DYNAMIC_KEY);
+        location.reload();
+      }
+
+      restoreAllFromLocalStorage();
+      document.addEventListener("input", scheduleSaveAll, true);
+      document.addEventListener("change", scheduleSaveAll, true);
+      window.addEventListener("beforeunload", saveAllToLocalStorage);
 
       // Auto-ping
       setTimeout(pingApi, 600);
