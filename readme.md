@@ -27,6 +27,12 @@ Browser → [dev-proxy.mjs :8000] → [MedCAT Backend :5555]
 `dev-proxy.mjs` meneruskan semua permintaan `/api/*` ke backend MedCAT yang berjalan di Docker.
 `dev-proxy.mjs` forwards all `/api/*` requests to the MedCAT backend running in Docker.
 
+UI pada repositori ini tidak hanya berfungsi sebagai form uji sederhana, tetapi juga sebagai audit tester untuk beberapa skenario seperti anotasi NLP, de-identification, latency check, negative case, dan perbandingan bilingual EN vs ID.
+The UI in this repository is not only a simple test form, but also an audit tester for scenarios such as NLP annotation, de-identification, latency checks, negative cases, and bilingual EN vs ID comparison.
+
+Pada panel `Bandingkan hasil EN vs ID`, aplikasi mengirim dua request terpisah ke endpoint `/api/process` lalu membandingkan jumlah entity yang terdeteksi dari teks Indonesia dan Inggris.
+In the `Compare EN vs ID results` panel, the app sends two separate requests to `/api/process` and then compares the number of detected entities between Indonesian and English text.
+
 ---
 
 ## Langkah-langkah / Setup Steps
@@ -145,6 +151,12 @@ curl -XPOST http://localhost:5555/api/process \
 | `curl http://localhost:5555/api/info` tidak merespons / no response | Tunggu beberapa saat agar container selesai start, lalu coba lagi / Wait for the container to finish starting, then retry |
 | UI tidak dapat terhubung ke backend / UI cannot connect | Pastikan `curl http://localhost:5555/api/info` berhasil, lalu pastikan proxy sudah berjalan / Ensure `curl http://localhost:5555/api/info` works, then ensure the proxy is running |
 | Port `8000` atau `5555` sudah dipakai / already in use | Ganti dengan port lain di command proxy / Change to another port in the proxy command |
+| Muncul error `rEN is not defined` saat klik `Bandingkan hasil EN vs ID` / `rEN is not defined` appears when clicking `Compare EN vs ID results` | Gunakan versi terbaru file `index.html` atau `index_v2.html`, lalu lakukan hard refresh browser agar JavaScript lama tidak tercache / Use the latest `index.html` or `index_v2.html`, then hard-refresh the browser so stale JavaScript is not cached |
+
+### Catatan teknis / Technical note
+
+Perbaikan terbaru untuk panel bilingual memastikan scoring `F` membaca variabel respons yang benar untuk request Indonesia (`rId`) dan Inggris (`rEn`), lalu mengevaluasi status HTTP (`response.status`) dan jumlah entity hasil parsing (`idE` dan `enE`).
+The latest fix for the bilingual panel ensures the `F` score reads the correct response variables for the Indonesian (`rId`) and English (`rEn`) requests, then evaluates the HTTP status (`response.status`) and parsed entity counts (`idE` and `enE`).
 
 ---
 

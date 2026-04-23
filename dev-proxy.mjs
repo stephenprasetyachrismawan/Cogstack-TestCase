@@ -7,7 +7,7 @@ import { dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const target = new URL(process.env.API_TARGET || process.argv[2] || "http://localhost:5556");
+const target = new URL(process.env.API_TARGET || process.argv[2] || "http://localhost:5555");
 const port = Number(process.env.PORT || process.argv[3] || 8000);
 
 const mimeTypes = {
